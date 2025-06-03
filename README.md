@@ -40,3 +40,12 @@ This repository documents the setup, maintenance, and operations of a local Kube
 ## 🔑 Join Token
 
 Stored on the control-plane node:
+
+
+---
+
+## 🚀 Node Join Command
+
+For adding a new worker:
+```bash
+curl -sfL https://get.k3s.io | K3S_URL=https://<control-plane-ip>:6443 K3S_TOKEN=<token> sh -
