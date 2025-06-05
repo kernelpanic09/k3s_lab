@@ -1,0 +1,36 @@
+- name: Install ArgoCD to the cluster
+  hosts: control-plane
+  become: true
+  gather_facts: false
+
+  vars:
+    argocd_namespace: argocd
+    argocd_manifest_url: https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+  tasks:
+    - name: Create argocd namespace
+      shell: kubectl create namespace {{ argocd_namespace }} --dry-run=client -o yaml | kubectl apply -f -
+      args:
+        executable: /bin/bash
+
+    - name: Apply ArgoCD install manifest
+      shell: kubectl apply -n {{ argocd_namespace }} -f {{ argocd_manifest_url }}
+      args:
+        executable: /bin/bash
+
+    - name: Wait for ArgoCD server pod to be ready
+      shell: |
+        kubectl wait -n {{ argocd_namespace }} \
+          --for=condition=ready pod \
+          -l app.kubernetes.io/name=argocd-server \
+          --timeout=180s
+      args:
+        executable: /bin/bash
+
+    - name: Display ArgoCD server service info
+      shell: kubectl get svc -n {{ argocd_namespace }}
+      register: svc_output
+
+    - name: Show service details
+      debug:
+        var: svc_output.stdout

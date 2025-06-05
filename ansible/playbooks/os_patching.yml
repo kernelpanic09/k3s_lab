@@ -1,0 +1,52 @@
+- name: Staggered OS upgrade and reboot with logging
+  hosts: all
+  serial: 1
+  become: true
+  gather_facts: yes
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+        autoremove: yes
+
+    - name: Check if reboot is required
+      stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+
+    - name: Reboot the node if required
+      reboot:
+        reboot_timeout: 600
+      when: reboot_required.stat.exists
+
+    - name: Wait for SSH to return
+      wait_for_connection:
+        delay: 10
+        timeout: 300
+      when: reboot_required.stat.exists
+
+    - name: Set log path
+      set_fact:
+        upgrade_log: "/var/log/k3s-upgrade-{{ inventory_hostname }}-{{ ansible_date_time.iso8601_basic_short }}.log"
+
+    - name: Log upgrade success
+      copy:
+        dest: "{{ upgrade_log }}"
+        content: |
+          Node: {{ inventory_hostname }}
+          Date: {{ ansible_date_time.date }} {{ ansible_date_time.time }}
+          OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          Kernel: {{ ansible_kernel }}
+          Reboot Required: {{ reboot_required.stat.exists }}
+          Upgrade Status: SUCCESS
+        mode: '0644'
+
+    - name: Print log path
+      debug:
+        msg: "Upgrade log saved to {{ upgrade_log }}"
