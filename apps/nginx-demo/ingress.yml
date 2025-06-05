@@ -4,8 +4,13 @@ metadata:
   name: nginx-demo-ingress
   namespace: nginx-demo
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
 spec:
+  tls:
+    - hosts:
+        - nginx.lab.local
+      secretName: nginx-tls
   rules:
     - host: nginx.lab.local
       http:
