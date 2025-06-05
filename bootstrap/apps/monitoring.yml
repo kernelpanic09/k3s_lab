@@ -6,15 +6,14 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/kernelpanic09/k3s_lab.git
-    targetRevision: HEAD
-    path: bootstrap/platform/monitoring
+    chart: kube-prometheus-stack
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: 57.0.2
     helm:
-      chart: kube-prometheus-stack
-      repoURL: https://prometheus-community.github.io/helm-charts
       releaseName: monitoring
       valueFiles:
         - values.yaml
+    path: bootstrap/platform/monitoring
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
