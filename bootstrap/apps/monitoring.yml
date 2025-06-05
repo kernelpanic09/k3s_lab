@@ -12,7 +12,7 @@ spec:
     helm:
       releaseName: monitoring
       valueFiles:
-        - values.yaml
+        - values.yml
     path: bootstrap/platform/monitoring
   destination:
     server: https://kubernetes.default.svc
