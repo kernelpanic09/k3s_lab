@@ -4,5 +4,5 @@ helmCharts:
     version: 57.0.2
     releaseName: monitoring
     namespace: monitoring
-    valuesFile: values.yaml
+    valuesFile: values.yml
 resources: []
