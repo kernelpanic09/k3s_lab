@@ -1,5 +1,5 @@
 resources:
-  - deployment.yaml
-  - service.yaml
-  - configmap.yaml
-  - ingress.yaml
+  - deployment.yml
+  - service.yml
+  - configmap.yml
+  - ingress.yml
