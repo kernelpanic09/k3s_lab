@@ -53,22 +53,22 @@ iface lo inet loopback
 ## 3. ✅ Allow NetworkManager to manage interfaces
 
 Edit:
-
+```bash
 nano /etc/NetworkManager/NetworkManager.conf
 
 Ensure this section exists:
 
 [ifupdown]
 managed=true
-
+```
 Save and exit.
 ## 4. 🔄 Restart networking services
-
+```bash
 systemctl restart networking
 systemctl restart NetworkManager
-
+```
 ## 5. ⚙️ Create a static connection profile
-
+```bash
 For control-plane:
 
 nmcli con add type ethernet con-name static-controlplane ifname ens18 autoconnect yes ipv4.method manual \
@@ -83,13 +83,13 @@ For worker-2:
 
 nmcli con add type ethernet con-name static-worker2 ifname ens18 autoconnect yes ipv4.method manual \
 ipv4.addresses 192.168.1.91/24 ipv4.gateway 192.168.1.1 ipv4.dns "1.1.1.1 8.8.8.8"
-
+```
 ## 6. ✅ Activate the static connection
-
+```bash
 nmcli con up static-controlplane   # or static-worker1 / static-worker2
-
+```
 ## 7. 🧹 Delete unused/rogue connections (safe to run once static is working)
-
+```bash
 nmcli con delete "Wired connection 1"
 nmcli con delete "Wired connection 2"
 nmcli con delete "Wired connection 3"
@@ -97,21 +97,21 @@ nmcli con delete "Wired connection 3"
 Optional cleanup:
 
 nmcli con delete $(nmcli con show | grep veth | awk '{print $1}')
-
+```
 ## 8. 🔁 Reboot and confirm
-
+```bash
 reboot
 
 After reboot:
 
 ip a
 nmcli con show --active
-
+```
 ✅ Confirm the correct static IP is applied
 ✅ Only the custom profile (static-*) is active
 ✅ No DHCP lease present
 🧪 Optional: Validate from control-plane
-
+```bash
 kubectl get nodes -o wide
 
 You should see:
@@ -119,7 +119,7 @@ Node	IP	Status
 control-plane	192.168.1.80	Ready
 worker-1	192.168.1.90	Ready
 worker-2	192.168.1.91	Ready
-
+```
 
 🧠 Notes
 
