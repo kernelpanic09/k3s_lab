@@ -29,7 +29,8 @@ This is a simple NGINX-based demo application designed to demonstrate GitOps dep
 
 ## Accessing the App
 
-    Ensure this DNS mapping exists on your local machine:
+Ensure this DNS mapping exists on your local machine:
+
 ```bash
 192.168.1.80 nginx.lab.local
 ```
@@ -37,7 +38,7 @@ Replace 192.168.1.80 with your control-plane node IP.
 
 Open a browser and navigate to:
 ```bash
-    http://nginx.lab.local
+http://nginx.lab.local
 ```
 ## ArgoCD Integration
 
