@@ -27,6 +27,27 @@
           - tmux
           - bash-completion
         state: present
+    
+    - name: Download Helm installer script
+      get_url:
+        url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        dest: /tmp/get_helm.sh
+        mode: '0755'
+
+    - name: Install Helm
+      shell: /tmp/get_helm.sh
+      args:
+        creates: /usr/local/bin/helm
+
+    - name: Verify Helm install
+      command: helm version
+      register: helm_check
+      changed_when: false
+
+    - name: Show Helm version
+      debug:
+        var: helm_check.stdout
+
 
     - name: Install k9s
       get_url:
