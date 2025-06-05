@@ -1,0 +1,10 @@
+installCRDs: true
+
+# Optional cleanup tweaks for dev clusters
+extraArgs:
+  - --enable-certificate-owner-ref=true
+
+# Optional: disable telemetry
+global:
+  leaderElection:
+    namespace: cert-manager
