@@ -31,11 +31,12 @@ This guide documents the complete, tested process used to configure **persistent
 apt update && apt install -y network-manager
 systemctl enable NetworkManager
 systemctl start NetworkManager
+```
 
-2. 🧼 Disable legacy /etc/network/interfaces DHCP
+## 2. 🧼 Disable legacy /etc/network/interfaces DHCP
 
 Edit the file:
-
+```bash
 nano /etc/network/interfaces
 
 Comment out or delete:
@@ -48,8 +49,8 @@ Leave only the loopback:
 
 auto lo
 iface lo inet loopback
-
-3. ✅ Allow NetworkManager to manage interfaces
+```
+## 3. ✅ Allow NetworkManager to manage interfaces
 
 Edit:
 
@@ -61,12 +62,12 @@ Ensure this section exists:
 managed=true
 
 Save and exit.
-4. 🔄 Restart networking services
+## 4. 🔄 Restart networking services
 
 systemctl restart networking
 systemctl restart NetworkManager
 
-5. ⚙️ Create a static connection profile
+## 5. ⚙️ Create a static connection profile
 
 For control-plane:
 
@@ -83,11 +84,11 @@ For worker-2:
 nmcli con add type ethernet con-name static-worker2 ifname ens18 autoconnect yes ipv4.method manual \
 ipv4.addresses 192.168.1.91/24 ipv4.gateway 192.168.1.1 ipv4.dns "1.1.1.1 8.8.8.8"
 
-6. ✅ Activate the static connection
+## 6. ✅ Activate the static connection
 
 nmcli con up static-controlplane   # or static-worker1 / static-worker2
 
-7. 🧹 Delete unused/rogue connections (safe to run once static is working)
+## 7. 🧹 Delete unused/rogue connections (safe to run once static is working)
 
 nmcli con delete "Wired connection 1"
 nmcli con delete "Wired connection 2"
@@ -97,7 +98,7 @@ Optional cleanup:
 
 nmcli con delete $(nmcli con show | grep veth | awk '{print $1}')
 
-8. 🔁 Reboot and confirm
+## 8. 🔁 Reboot and confirm
 
 reboot
 
@@ -118,6 +119,8 @@ Node	IP	Status
 control-plane	192.168.1.80	Ready
 worker-1	192.168.1.90	Ready
 worker-2	192.168.1.91	Ready
+
+
 🧠 Notes
 
     Do not create static configs in /etc/network/interfaces — use nmcli

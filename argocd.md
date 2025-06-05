@@ -104,12 +104,55 @@ kubectl describe ingress argocd-ingress -n argocd
 # Debug Traefik
 kubectl logs -n kube-system -l app=traefik
 ```
+
+
+## Step 5: Enable ArgoCD Self-Management via GitOps
+
+To make ArgoCD manage its own configuration via GitOps:
+
+    Ensure your project repo is public on GitHub (or configure access credentials later).
+
+    Create a GitOps bootstrap structure in the repo:
+    
+```bash
+bootstrap/
+├── apps/
+│   └── argocd.yml
+├── projects/
+│   └── default.yml
+└── root-app.yml
+```
+Apply the root ArgoCD application once:
+```bash
+    kubectl apply -f bootstrap/root-app.yml -n argocd
+
+    ArgoCD will clone your repo and apply everything under bootstrap/apps, including an argocd.yml that manages itself.
+
+    🔁 This is known as recursive GitOps — ArgoCD manages its own configuration from Git.
+```
+
+Useful Commands
+
+# See all resources in ArgoCD namespace
+kubectl get all -n argocd
+
+# Inspect ingress config
+kubectl describe ingress argocd-ingress -n argocd
+
+# Tail controller logs (StatefulSet)
+kubectl logs -n argocd pod/argocd-application-controller-0
+
+# Refresh ArgoCD root application
+kubectl -n argocd annotate application root-bootstrap argocd.argoproj.io/refresh=hard --overwrite
+
 Notes
 
 This deployment is designed for lab/dev environments. For production use:
 
-    Integrate TLS via cert-manager + Let's Encrypt
+- Integrate TLS via cert-manager + Let's Encrypt
 
-    Use external DNS + secure authentication (OIDC, SSO, etc.)
+- Use external DNS and enable OIDC/SSO authentication 
 
-    Harden cluster access and secrets management
+- Secure sensitive resources and cluster access
+
+- Separate app and platform layers into distinct Git repos
