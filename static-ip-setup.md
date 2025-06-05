@@ -93,17 +93,17 @@ nmcli con up static-controlplane   # or static-worker1 / static-worker2
 nmcli con delete "Wired connection 1"
 nmcli con delete "Wired connection 2"
 nmcli con delete "Wired connection 3"
-
+```
 Optional cleanup:
-
+```bash
 nmcli con delete $(nmcli con show | grep veth | awk '{print $1}')
 ```
 ## 8. 🔁 Reboot and confirm
 ```bash
 reboot
-
+```
 After reboot:
-
+```bash
 ip a
 nmcli con show --active
 ```
@@ -113,8 +113,9 @@ nmcli con show --active
 🧪 Optional: Validate from control-plane
 ```bash
 kubectl get nodes -o wide
-
+```
 You should see:
+```bash
 Node	IP	Status
 control-plane	192.168.1.80	Ready
 worker-1	192.168.1.90	Ready
