@@ -135,21 +135,26 @@ Apply the root ArgoCD application once:
 
 
 
-Useful Commands
+## Useful Commands
 
-# See all resources in ArgoCD namespace
+See all resources in ArgoCD namespace
+```bash
 kubectl get all -n argocd
-
+```
 # Inspect ingress config
+```bash
 kubectl describe ingress argocd-ingress -n argocd
-
+```
 # Tail controller logs (StatefulSet)
+```bash
 kubectl logs -n argocd pod/argocd-application-controller-0
-
+```
 # Refresh ArgoCD root application
+```bash
 kubectl -n argocd annotate application root-bootstrap argocd.argoproj.io/refresh=hard --overwrite
+```
 
-Notes
+## Notes
 
 This deployment is designed for lab/dev environments. For production use:
 
