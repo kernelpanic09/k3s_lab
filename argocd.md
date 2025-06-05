@@ -113,7 +113,7 @@ To make ArgoCD manage its own configuration via GitOps:
     Ensure your project repo is public on GitHub (or configure access credentials later).
 
     Create a GitOps bootstrap structure in the repo:
-    
+
 ```bash
 bootstrap/
 ├── apps/
@@ -130,6 +130,10 @@ Apply the root ArgoCD application once:
 
     🔁 This is known as recursive GitOps — ArgoCD manages its own configuration from Git.
 ```
+
+![argocd_screenshot_self_mgmt](image.png)
+
+
 
 Useful Commands
 
