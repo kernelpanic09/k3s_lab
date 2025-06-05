@@ -141,15 +141,15 @@ See all resources in ArgoCD namespace
 ```bash
 kubectl get all -n argocd
 ```
-# Inspect ingress config
+Inspect ingress config
 ```bash
 kubectl describe ingress argocd-ingress -n argocd
 ```
-# Tail controller logs (StatefulSet)
+Tail controller logs (StatefulSet)
 ```bash
 kubectl logs -n argocd pod/argocd-application-controller-0
 ```
-# Refresh ArgoCD root application
+Refresh ArgoCD root application
 ```bash
 kubectl -n argocd annotate application root-bootstrap argocd.argoproj.io/refresh=hard --overwrite
 ```
