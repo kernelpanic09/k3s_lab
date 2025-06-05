@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-html
+  namespace: nginx-demo
+data:
+  index.html: |
+    <html>
+      <head><title>NGINX Demo</title></head>
+      <body>
+        <h1>This is a demo app running on NGINX</h1>
+      </body>
+    </html>
