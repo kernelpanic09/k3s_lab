@@ -66,6 +66,15 @@
         mode: 0755
       when: k9s_download.changed
 
+    - name: Ensure NFS share is mountable
+      command: mount -t nfs 192.168.1.240:/kb/nfs/k3s-backups /mnt
+      register: mount_test
+      ignore_errors: yes
+
+    - name: Report NFS mount result
+      debug:
+        var: mount_test.stdout_lines      
+
     - name: Set MOTD with turtle ASCII banner
       copy:
         src: files/motd-turtle.txt
