@@ -34,12 +34,14 @@ metadata.annotations: Too long: may not be more than 262144 bytes
 Manually install CRDs once using server-side apply to bypass Helm + ArgoCD limitations:
 
 # Unpack CRDs from the Helm chart
+```bash
 helm pull prometheus-community/kube-prometheus-stack --version 57.0.2
 tar -xzf kube-prometheus-stack-57.0.2.tgz
-
-# Apply CRDs using server-side apply
+```
+## Apply CRDs using server-side apply
+```bash
 kubectl apply --server-side --force-conflicts -f kube-prometheus-stack/crds/
-
+```
     Alternatively, use the upstream Prometheus Operator CRDs from the GitHub repo and trim annotations as needed.
 
 ## ✅ Helm App via ArgoCD
@@ -81,8 +83,8 @@ kubectl create secret generic grafana-admin-secret \
   -n monitoring
 ```
 # 🔍 Access Grafana
-
+```bash
 URL:      https://grafana.codepretzels.com
 Username: admin
 Password: (from grafana-admin-secret)
-
+```
