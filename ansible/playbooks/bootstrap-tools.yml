@@ -26,6 +26,8 @@
           - less
           - tmux
           - bash-completion
+          - yq
+          - git
         state: present
     
     - name: Download Helm installer script
