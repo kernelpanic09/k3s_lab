@@ -13,5 +13,11 @@ spec:
     chart: nfs-subdir-external-provisioner
     targetRevision: 4.0.18
     helm:
-      valueFiles:
-        - bootstrap/platform/nfs-storage/values.yml
+      values: |
+        nfs:
+          server: 192.168.1.240
+          path: /kb/nfs/k3s-backups
+        storageClass:
+          name: nfs-client
+          defaultClass: true
+          reclaimPolicy: Retain
