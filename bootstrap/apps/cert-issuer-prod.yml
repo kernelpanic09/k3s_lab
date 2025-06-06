@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/kernelpanic09/k3s_lab.git
     targetRevision: HEAD
-    path: bootstrap/platform/cert-manager
+    path: bootstrap/platform/cert-issuer-prod
   destination:
     server: https://kubernetes.default.svc
     namespace: cert-manager
