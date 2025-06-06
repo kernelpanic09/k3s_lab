@@ -1,21 +1,40 @@
-  helm:
-    releaseName: monitoring
-    values: |
-      crds:
-        enabled: false
-      grafana:
-        ingress:
-          enabled: true
-          annotations:
-            cert-manager.io/cluster-issuer: letsencrypt-prod
-            traefik.ingress.kubernetes.io/router.entrypoints: websecure
-          hosts:
-            - grafana.codepretzels.com
-          tls:
-            - secretName: grafana-tls
-              hosts:
-                - grafana.codepretzels.com
-        admin:
-          existingSecret: grafana-admin-secret
-          userKey: admin-user
-          passwordKey: admin-password
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring
+  namespace: argocd
+spec:
+  project: default
+  source:
+    chart: kube-prometheus-stack
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: 57.0.2
+    helm:
+      releaseName: monitoring
+      parameters:
+        - name: crds.enabled
+          value: "false"
+      values: |
+        grafana:
+          ingress:
+            enabled: true
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt-prod
+              traefik.ingress.kubernetes.io/router.entrypoints: websecure
+            hosts:
+              - grafana.codepretzels.com
+            tls:
+              - secretName: grafana-tls
+                hosts:
+                  - grafana.codepretzels.com
+          admin:
+            existingSecret: grafana-admin-secret
+            userKey: admin-user
+            passwordKey: admin-password
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
