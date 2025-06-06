@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nfs-storage
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/kernelpanic09/k3s_lab.git
+    targetRevision: HEAD
+    path: bootstrap/platform/nfs-storage
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: nfs-provisioner
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
