@@ -1,0 +1,3 @@
+resources:
+  - cluster-issuer-staging.yml
+  - cluster-issuer-prod.yml
