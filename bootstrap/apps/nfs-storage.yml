@@ -4,15 +4,10 @@ metadata:
   name: nfs-storage
   namespace: argocd
 spec:
-  project: default
   source:
-    repoURL: https://github.com/kernelpanic09/k3s_lab.git
-    targetRevision: HEAD
-    path: bootstrap/platform/nfs-storage
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: nfs-provisioner
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
+    repoURL: https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
+    chart: nfs-subdir-external-provisioner
+    targetRevision: 4.0.18
+    helm:
+      valueFiles:
+        - bootstrap/platform/nfs-storage/values.yml
