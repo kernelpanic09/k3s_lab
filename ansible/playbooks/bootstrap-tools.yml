@@ -28,6 +28,7 @@
           - bash-completion
           - yq
           - git
+          - nfs-common
         state: present
     
     - name: Download Helm installer script
