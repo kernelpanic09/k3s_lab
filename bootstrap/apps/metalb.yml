@@ -13,7 +13,7 @@ spec:
       recurse: true
   destination:
     server: https://kubernetes.default.svc
-    namespace: metallb-system
+    namespace: argocd  
   syncPolicy:
     automated:
       prune: true
