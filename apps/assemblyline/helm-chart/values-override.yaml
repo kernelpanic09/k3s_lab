@@ -37,7 +37,10 @@ resources:
 
 # Elastic helper fix
 elasticHelper:
-  initImage: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+  image:
+    repository: docker.elastic.co/elasticsearch/elasticsearch
+    tag: "8.10.2"
+
 
 # Reduce heavy replicas for small clusters
 elasticsearch:
