@@ -22,18 +22,18 @@ configuration:
   ui:
     fqdn: "al.codepretzels.com"
   submission:
-    max_file_size: 104857600
+    max_file_size: 104857600  # 100MB
   logging:
-    log_level: "INFO"
+    log_level: "ERROR"  # Reduce log volume to ease CPU/IO load
 
-# Global resource tuning (apply to various components)
+# Global resource tuning (applies to most components)
 resources:
   requests:
-    cpu: "50m"
-    memory: "128Mi"
+    cpu: "20m"
+    memory: "64Mi"
   limits:
-    cpu: "250m"
-    memory: "256Mi"
+    cpu: "100m"
+    memory: "128Mi"
 
 # Elastic helper fix
 elasticHelper:
@@ -41,12 +41,19 @@ elasticHelper:
     repository: docker.elastic.co/elasticsearch/elasticsearch
     tag: "8.10.2"
 
-
-# Reduce heavy replicas for small clusters
+# Reduce Elasticsearch footprint
 elasticsearch:
   master:
     replicas: 1
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "512Mi"
+      limits:
+        cpu: "200m"
+        memory: "768Mi"
 
+# Reduce filestore load
 filestore:
   replicas: 1
 
