@@ -4,7 +4,7 @@ ingressAnnotations:
   cert-manager.io/cluster-issuer: "letsencrypt-prod"
 tlsSecretName: "assemblyline-tls"
 
-# Optional: use internal file storage
+# Use internal file storage
 internalFilestore: true
 
 # Storage classes
@@ -25,10 +25,35 @@ configuration:
     max_file_size: 104857600
   logging:
     log_level: "INFO"
-  resources:
-    requests:
-      cpu: "50m"
-      memory: "128Mi"
-    limits:
-      cpu: "250m"
-      memory: "256Mi"  
+
+# Global resource tuning (apply to various components)
+resources:
+  requests:
+    cpu: "50m"
+    memory: "128Mi"
+  limits:
+    cpu: "250m"
+    memory: "256Mi"
+
+# Elastic helper fix
+elasticHelper:
+  initImage: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+
+# Reduce heavy replicas for small clusters
+elasticsearch:
+  master:
+    replicas: 1
+
+filestore:
+  replicas: 1
+
+# Disable or reduce failing/optional services
+services:
+  zeek:
+    enabled: false
+  frankenstrings:
+    enabled: false
+  unpacme:
+    replicas: 1
+  yara:
+    replicas: 1
