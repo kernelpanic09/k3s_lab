@@ -11,7 +11,7 @@ spec:
     path: apps/assemblyline/helm-chart
     helm:
       valueFiles:
-        - ../../values.yaml
+        - values-override.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: al
