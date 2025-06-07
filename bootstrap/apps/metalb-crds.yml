@@ -6,7 +6,7 @@ metadata:
 spec:
   destination:
     server: https://kubernetes.default.svc
-    namespace: argocd
+    namespace: metallb-system
   project: default
   source:
     repoURL: https://github.com/kernelpanic09/k3s_lab.git
