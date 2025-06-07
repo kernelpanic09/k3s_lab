@@ -13,7 +13,6 @@ spec:
     targetRevision: HEAD
     path: bootstrap/platform/metallb
     directory:
-      recurse: true
   syncPolicy:
     automated:
       selfHeal: true
