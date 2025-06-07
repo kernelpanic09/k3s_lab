@@ -53,7 +53,27 @@ services:
     enabled: false
   frankenstrings:
     enabled: false
-  unpacme:
-    replicas: 1
   yara:
-    replicas: 1
+    enabled: false
+  unpacme:
+    enabled: false
+  apkaye:
+    enabled: false
+  tagcheck:
+    enabled: false
+  overpower:
+    enabled: false
+  espresso:
+    enabled: false
+  metapeek:
+    enabled: false
+  metadefender:
+    enabled: false
+  torrentslicer:
+    enabled: false
+  characterizer:
+    enabled: false
+  batchdeobfuscator:
+    enabled: false
+  swiffer:
+    enabled: false
