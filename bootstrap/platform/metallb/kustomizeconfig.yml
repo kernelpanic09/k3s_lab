@@ -1,4 +1,3 @@
-# bootstrap/platform/metallb/kustomizeconfig.yaml
 apiVersion: builtin
 kind: AnnotationsTransformer
 metadata:
