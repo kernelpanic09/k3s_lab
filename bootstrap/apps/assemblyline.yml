@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/YOUR_USERNAME/YOUR_GITOPS_REPO.git
+    repoURL: https://github.com/kernelpanic09/k3s_lab.git
     targetRevision: HEAD
     path: apps/assemblyline/helm-chart
     helm:
@@ -17,5 +17,5 @@ spec:
     namespace: al
   syncPolicy:
     automated:
-      prune: true
       selfHeal: true
+      prune: true
