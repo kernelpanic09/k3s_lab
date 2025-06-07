@@ -36,7 +36,7 @@ redisVolatileIOThreads: 1
 revisionCount: 2
 
 # When true, new pods are launched to aggregate all logs into a central ELK stack
-enableLogging: true
+enableLogging: false
 
 # When true, enable the ability to attach a debugger to core components
 # Only intended to be used in development for live debugging
@@ -44,18 +44,18 @@ enableCoreDebugging: false
 
 # When true, new pods are launch to gather elastic and
 # Assemblyline processing metrics into a central ELK stack
-enableMetrics: true
+enableMetrics: false
 
 # When true, new pods are launch to gather hosts, containers, pods metrics into a
 # central ELK stack
-enableMetricbeat: true
+enableMetricbeat: false
 
 # When true an elk stack is launched inside assemblyline to collect logs and metrics
-internalELKStack: true
+internalELKStack: false
 
 # When true a second elastic DB is launched for the sole purpose of collecting logs
 # and metrics
-seperateInternalELKStack: true
+seperateInternalELKStack: false
 
 # If you are hosting an existing Elasticsearch instance for storing documents
 # that Assemblyline generates or will generate and save to, set this setting to false.

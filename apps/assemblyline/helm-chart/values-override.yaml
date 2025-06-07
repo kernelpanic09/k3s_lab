@@ -25,3 +25,10 @@ configuration:
     max_file_size: 104857600
   logging:
     log_level: "INFO"
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "128Mi"
+    limits:
+      cpu: "250m"
+      memory: "256Mi"  
