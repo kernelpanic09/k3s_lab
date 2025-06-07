@@ -1,18 +1,18 @@
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: assemblyline-ns
-  namespace: argocd
-spec:
-  project: default
-  source:
-    repoURL: https://github.com/kernelpanic09/k3s_lab.git
-    targetRevision: HEAD
-    path: apps/assemblyline/ns
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: argocd
-  syncPolicy:
-    automated:
-      selfHeal: true
-      prune: true
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: assemblyline-ns
+#   namespace: argocd
+# spec:
+#   project: default
+#   source:
+#     repoURL: https://github.com/kernelpanic09/k3s_lab.git
+#     targetRevision: HEAD
+#     path: apps/assemblyline/ns
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: argocd
+#   syncPolicy:
+#     automated:
+#       selfHeal: true
+#       prune: true
