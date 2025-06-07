@@ -1,0 +1,1279 @@
+# Tags for the containers used
+release: 4.6.0.stable3
+
+# Images for containers used
+assemblylineCoreImage: cccs/assemblyline-core
+assemblylineUIImage: cccs/assemblyline-ui
+assemblylineFrontendImage: cccs/assemblyline-ui-frontend
+assemblylineSocketIOImage: cccs/assemblyline-socketio
+assemblylineServiceAPIImage: cccs/assemblyline-service-server
+assemblylineServiceImagePrefix: cccs/assemblyline-service-
+assemblylineServiceVersion: "4.5.stable"
+retrohuntImage: cccs/hauntedhouse
+retrohuntRelease: "stable"
+elasticAPMImage: docker.elastic.co/apm/apm-server
+elasticLogstashImage: docker.elastic.co/logstash/logstash
+elasticLogstashTag: "8.10.2"
+redisImage: redis
+
+# Image Pull Policy, one of: "Always" or "IfNotPresent"
+imagePullPolicy: IfNotPresent
+
+# Storage classes for persistent data.
+redisStorageClass:
+persistantStorageClass:
+# Retrohunt uses persistantStorageClass if this is not set, only use this when you need them to be different
+retrohuntStorageClass:
+
+# Overwrites storage size for redis persistent volume. (default: 20Gi)
+redisStorageSize:
+
+# Number of IO thread redis uses
+redisPersistentIOThreads: 1
+redisVolatileIOThreads: 1
+
+# Number of revisions for each deployments
+revisionCount: 2
+
+# When true, new pods are launched to aggregate all logs into a central ELK stack
+enableLogging: true
+
+# When true, enable the ability to attach a debugger to core components
+# Only intended to be used in development for live debugging
+enableCoreDebugging: false
+
+# When true, new pods are launch to gather elastic and
+# Assemblyline processing metrics into a central ELK stack
+enableMetrics: true
+
+# When true, new pods are launch to gather hosts, containers, pods metrics into a
+# central ELK stack
+enableMetricbeat: true
+
+# When true an elk stack is launched inside assemblyline to collect logs and metrics
+internalELKStack: true
+
+# When true a second elastic DB is launched for the sole purpose of collecting logs
+# and metrics
+seperateInternalELKStack: true
+
+# If you are hosting an existing Elasticsearch instance for storing documents
+# that Assemblyline generates or will generate and save to, set this setting to false.
+# If `internalDatastore: true`, this will cause Helm to start up an internal Elasticsearch
+# instance called "datastore-master" on the deployment cluster
+# Logs and metric data will not be stored in the same Elasticsearch instance unless
+# `seperateInternalELKStack: false`.
+# Note: We recommend using the default setting in most deployment cases as Assemblyline heavily
+# depends on the datastore for most operations with regards to internal document management
+internalDatastore: true
+
+# If you have an ftp server, s3 bucket, azure blob storage account or other
+# supported blob storage where you would like assemblyline to store the files
+# that are submitted set `internalFilestore` to false, and set the url
+# for your storage system to the `configuration.filestore.*` fields.
+internalFilestore: true
+
+# When ingesting files at a very high rate it can saturate the API container
+# making it hard for users to use the UI. Turning on this flag creates separate
+# containers for the ingest API which make the other APIs more responsive.
+separateIngestAPI: false
+
+# Launch an elastic APM server to collect profiling data and report it to the logging
+# elasticsearch database.
+enableAPM: false
+
+# Storage allocated for caching disks for the retrohunt server
+retrohuntCacheSize: 100Gi
+
+# Index storage for retrohunt workers
+retrohuntLocalStorageSize: 1T
+
+# Number of retrohunt worker instances. The capacity for indexed files is this multiplied
+# by the retrohuntLocalStorageSize. Increasing this number is always safe, decreasing
+# it will cause data to be lost
+retrohuntScale: 3
+
+# Resource reservations and limits for the retrohunt broker node
+retrohuntRequestedCPU: 1
+retrohuntRequestedRam: 4Gi
+retrohuntWorkerLimRam: 4Gi
+
+# Resource reservations for the retrohunt workers
+retrohuntWorkerRequestedCPU: 1
+retrohuntWorkerRequestedRam: 4Gi
+
+# ILM policy for APM indices (default: Elastic-defined, rollover to warm after 30d)
+apmILM:
+  enabled: "auto"
+  setup:
+    enabled: true
+    overwrite: false
+    require_policy: true
+    mapping:
+      - event_type: "error"
+        policy_name: "apm-rollover-30-days"
+        index_suffix: ""
+      - event_type: "span"
+        policy_name: "apm-rollover-30-days"
+        index_suffix: ""
+      - event_type: "transaction"
+        policy_name: "apm-rollover-30-days"
+        index_suffix: ""
+      - event_type: "metric"
+        policy_name: "apm-rollover-30-days"
+        index_suffix: ""
+      - event_type: "profile"
+        policy_name: "apm-rollover-30-days"
+        index_suffix: ""
+    policies:
+      - name: "apm-rollover-30-days"
+        policy:
+          phases:
+            hot:
+              actions:
+                rollover:
+                  max_size: "50gb"
+                  max_age: "30d"
+                set_priority:
+                  priority: 100
+            warm:
+              min_age: "30d"
+              actions:
+                set_priority:
+                  priority: 50
+                readonly: {}
+
+# Turn on/off the submission/alert replay feature
+useReplay: false
+# Type of replay containers to load in this deployment (loader or creator)
+replayMode: "creator"
+# (Optional) UID for user that's running Replay Loader (default: assemblyline)
+replayLoaderUser: 1000
+
+# List of CIDRs privileged services are allowed to access
+privilegedSafelistedCIDRs: []
+
+# If internal logging is not used, this specifies where to write metrics and logs.
+# Ignored when internal logging is set.
+loggingHost:
+kibanaHost: http://kibana/kibana
+loggingUsername: "elastic"
+loggingTLSVerify: "full"
+
+# Values used to configure the ingress
+ingressAnnotations: {}
+# This field is not required and will be set automatically if the field
+# configuration.ui.fqdn is defined. Only set this field directly when you need
+# the ingress to use a different value. Otherwise, set your domain there.
+ingressHost:
+# If a tls secret name is given here, that certificate will be used for https
+# If left null, a self signed cert will be generated.
+tlsSecretName:
+useSharedTLSCert:
+
+# SecretProvider definition that will be specifically for TLS
+# This requires installation of Secrets Store CSI Driver:
+# https://secrets-store-csi-driver.sigs.k8s.io/getting-started/installation
+tlsSecretProvider:
+  enabled: false
+  className: # Name of SecretProvider class object
+  tlsSecretName: "tls-secret-for-app" # Descriptive name for the secret in your Kubernetes cluster
+  tlsObjectName: "app-tls-certificate" # Name of the TLS certificate object in Azure KeyVault
+  provider: # Name of your provider
+  parameters: {} # Used to configure your CSI relative to the provider
+
+# HSTS management
+# see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
+# Set to true to enable HSTS
+enableHSTSHeader: false
+# Max Age value to send in HSTS header when enabled
+HSTSMaxAge: "31536000"
+
+# Session Cookie Samesite management
+# see https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies
+# Set to true to enable Session Cookie Samesite header
+enableSessionCookieSamesite: false
+# Set to either Strict or Lax
+sessionCookieSamesite: Strict
+
+# Turn on the directory reader module
+enableVacuum: false
+vacuumVolumes:
+vacuumMounts:
+vacuumCacheSize: "100Gi"
+vacuumUser: 1000
+
+# Bootstrap process settings
+# Whether an admin account should be created by the back end.
+#   Accepted Values:
+#     'on-install' only try to create an admin user when performing a helm install
+#     'always' run the create command on every helm upgrade and install
+#     'never' (or any other value) will not run the setup container
+# The password for this admin account will be drawn from the initial-admin-password
+# key of the assemblyline-system-passwords secret
+createAdminAccount: "on-install"
+
+# Service Accounts
+# bound to all core pods
+coreServiceAccountName: default
+# bound to privileged service pods that Scaler creates
+privilegedServiceAccountName: default
+# bound to unprivileged service pods that Scaler creates
+unprivilegedServiceAccountName: default
+# annotations added to service accounts
+serviceAccountAnnotations: {}
+
+# Internal communications are encrypted for hosts part of this chart
+enableInternalEncryption: false
+
+# A list of services to be installed, only run during a helm install.
+autoInstallServices:
+  - apivector
+  - apkaye
+  - antivirus
+  - batchdeobfuscator
+  - cape
+  - characterize
+  - configextractor
+  - deobfuscripter
+  - elf
+  - elfparser
+  - emlparser
+  - espresso
+  - extract
+  - floss
+  - frankenstrings
+  - iparse
+  - jsjaws
+  - metadefender
+  - metapeek
+  - oletools
+  - overpower
+  - pdfid
+  - peepdf
+  - pe
+  - pixaxe
+  - safelist
+  - sigma
+  - suricata
+  - swiffer
+  - tagcheck
+  - torrentslicer
+  - unpacme
+  - unpacker
+  - urldownloader
+  - vipermonkey
+  - virustotal
+  - xlmmacrodeobfuscator
+  - yara
+  - zeek
+
+# Extra environment variables, mounts, and volumes shared by all core containers
+# Any environment variables set here can be used in the value strings of any
+# field under the configuration.* block. This is the proper way to pass a secret
+# to the assemblyline core components. These values won't be passed to analysis
+# services.
+coreEnv: []
+coreLabels: {}
+coreMounts: []
+coreVolumes: []
+coreSecurityContext: {}
+
+# An affinity to be applied to all core (non-service) pods not provided by imported charts.
+# https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#NodeAffinity
+nodeAffinity:
+
+# A list of tolerations to be applied to all core (non-service) pods not provided by imported charts.
+# https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#Tolerations
+tolerations:
+
+
+# Should we use logstash to aggregate logs or let file write to elastic directly
+useLogstash: false
+
+# A logstash pipeline is set by default that will write to the internal elasticsearch
+# instance or to the given 'loggingHost' value. A pipeline passed as a string here
+# can be used for deeper customization
+customLogstashPipeline: null
+
+# You may want mount custom pipeline files or certificates if you are using
+# a custom logstash pipeline
+logstashVolumes:
+logstashMounts:
+
+# Should we use horizontal pod auto-scaler
+useAutoScaler: true
+
+# Starting Number of pods of each core component types
+serviceServerInstances: 1
+dispatcherInstances: 1
+ingesterInstances: 1
+APIInstances: 1
+ingestAPIInstances: 1
+internalAPIInstances: 1
+replayWorkerInstances: 1
+vacuumInstances: 1
+
+# Maximum Number of pods of each core component types
+serviceServerInstancesMax: 100
+dispatcherInstancesMax: 15
+ingesterInstancesMax: 10
+APIInstancesMax: 15
+ingestAPIInstancesMax: 15
+internalAPIInstancesMax: 2
+replayWorkerInstancesMax: 10
+vacuumInstancesMax: 10
+
+# Number of dispatcher result processing threads
+dispatcherResultThreads: 6
+dispatcherFinalizeThreads: 6
+
+# How long to let dispatchers try to clean up remaining jobs (in seconds)
+disptacherShutdownGrace: 60
+
+# Setup Elastic's default replicas and shards
+elasticDefaultReplicas: 1
+elasticDefaultShards: 1
+elasticAlertShards: 2
+elasticEmptyResultShards: 4
+elasticFileShards: 4
+elasticFileScoreShards: 4
+elasticResultShards: 18
+elasticSafelistShards: 4
+elasticSubmissionShards: 6
+
+# CPU Revervation
+defaultReqCPU: "50m"
+alerterReqCPU: "50m"
+archiverReqCPU: "50m"
+apmReqCPU: "250m"
+dispatcherReqCPU: "500m"
+elasticHelperReqCPU: "25m"
+esMetricsReqCPU: "50m"
+expiryReqCPU: "150m"
+frontendReqCPU: "50m"
+heartbeatReqCPU: "500m"
+internalUIReqCPU: "100m"
+ingestUIReqCPU: "500m"
+ingesterReqCPU: "500m"
+installJobReqCPU: "100m"
+logstashReqCPU: "100m"
+metricsReqCPU: "500m"
+plumberReqCPU: "50m"
+redisVolatileReqCPU: "750m"
+redisPersistentReqCPU: "500m"
+replayReqCPU: "250m"
+replayWorkerReqCPU: 1
+scalerReqCPU: "500m"
+serviceServerReqCPU: "500m"
+socketIOReqCPU: "100m"
+statisticsReqCPU: "50m"
+uiReqCPU: "500m"
+updaterReqCPU: "100m"
+workflowReqCPU: "50m"
+vacuumReqCPU: "0m"
+vacuumWorkerReqCPU: "500m"
+
+# CPU Limits
+defaultLimCPU: 1
+alerterLimCPU: 1
+archiverLimCPU: 1
+apmLimCPU: 1
+dispatcherLimCPU: 1
+elasticHelperLimCPU: "250m"
+esMetricsLimCPU: 1
+expiryLimCPU: 1
+frontendLimCPU: 1
+heartbeatLimCPU: 1
+internalUILimCPU: 1
+ingestUILimCPU: 1
+ingesterLimCPU: 1
+installJobLimCPU: 1
+logstashLimCPU: 1
+metricsLimCPU: 1
+plumberLimCPU: 1
+redisVolatileLimCPU: 1
+redisPersistentLimCPU: 1
+replayLimCPU: 1
+replayWorkerLimCPU: 1
+scalerLimCPU: 1
+serviceServerLimCPU: 1
+socketIOLimCPU: 1
+statisticsLimCPU: 1
+uiLimCPU: 1
+updaterLimCPU: "0.5"
+workflowLimCPU: 1
+vacuumWorkerLimCPU: 1
+
+# Memory reservation
+apmReqRam: 512Mi
+defaultReqRam: 128Mi
+dispatcherReqRam: 256Mi
+elasticHelperReqRam: 32Mi
+frontendReqRam: 128Mi
+ingestUIReqRam: 1Gi
+installJobReqRam: 256Mi
+internalUIReqRam: 1Gi
+logstashReqRam: 1536Mi
+redisPersistentReqRam: 1Gi
+redisVolatileReqRam: 1Gi
+replayReqRam: 256Mi
+replayWorkerReqRam: 1Gi
+scalerReqRam: 512Mi
+serviceServerReqRam: 1Gi
+socketIOReqRam: 256Mi
+uiReqRam: 1Gi
+updaterReqRam: 256Mi
+vacuumReqRam: 5Gi
+vacuumWorkerReqRam: 1Gi
+
+# Memory Limits
+apmLimRam: 2Gi
+defaultLimRam: 1Gi
+dispatcherLimRam: 1Gi
+elasticHelperLimRam: 256Mi
+frontendLimRam: 1Gi
+ingestUILimRam: 2Gi
+installJobLimRam: 1Gi
+internalUILimRam: 2Gi
+logstashLimRam: 1536Mi
+redisPersistentLimRam: 8Gi
+redisVolatileLimRam: 8Gi
+replayLimRam: 512Mi
+replayWorkerLimRam: 2Gi
+scalerLimRam: 4Gi
+serviceServerLimRam: 1Gi
+socketIOLimRam: 2Gi
+uiLimRam: 2Gi
+updaterLimRam: 1Gi
+vacuumWorkerLimRam: "5Gi"
+
+# HPA Target Usage
+APITargetUsage: 50
+internalAPITargetUsage: 70
+ingestAPITargetUsage: 30
+ingesterTargetUsage: 50
+dispatcherTargetUsage: 70
+serviceServerTargetUsage: 50
+replayTargetUsage: 50
+vacuumTargetUsage: 150
+
+# Replay configuration block that will be use to sync alerts and submissions
+# between 2 Assemblyline instances
+replay:
+  creator:
+    lookback_time: "*"
+    output_filestore: file:///tmp/replay/output
+    working_directory: /tmp/replay/work
+    alert_input:
+      enabled: true
+      threads: 6
+      filter_queries:
+        - "NOT extended_scan:submitted"
+        - "workflows_completed:true"
+    submission_input:
+      enabled: true
+      threads: 6
+      filter_queries: ["metadata.replay:requested"]
+    client:
+      type: direct
+  loader:
+    failed_directory: /tmp/replay/failed
+    input_threads: 6
+    input_directory: /tmp/replay/input
+    min_classification: null
+    rescan: []
+    working_directory: /tmp/replay/work
+    client:
+      type: direct
+
+replayLivenessCommand: "if [[ ! `find /tmp/heartbeat -newermt '-30 seconds'` ]]; then false; fi"
+replayLoaderVolume:
+  - name: replay-data
+    nfs:
+      server: localhost
+      path: /path/to/folder
+
+# Internal configuration for assemblyline components. See the assemblyline
+# administration documentation for more details.
+# https://cybercentrecanada.github.io/assemblyline4_docs/
+configuration:
+  core:
+    alerter:
+      delay: 0
+    dispatcher:
+      max_inflight: 10000
+    ingester:
+      max_inflight: 6000
+    metrics:
+      apm_server:
+        server_url: "http://apm:8200"
+      elasticsearch:
+        hosts:
+          ["http://${LOGGING_USERNAME}:${LOGGING_PASSWORD}@${LOGGING_HOST}"]
+      redis:
+        host: redis-volatile
+        port: 6379
+    redis:
+      nonpersistent:
+        host: redis-volatile
+        port: 6379
+      persistent:
+        host: redis-persistent
+        port: 6379
+    scaler:
+      enable_pod_security: false
+      cluster_pod_list: true
+      service_defaults:
+        backlog: 10
+        min_instances: 1
+        growth: 30
+        shrink: 10
+        environment:
+          - name: "SERVICE_API_HOST"
+            value: "http://service-server:5003"
+  datastore:
+    archive:
+      enabled: False
+    hosts: ["http://elastic:${ELASTIC_PASSWORD}@datastore-master:9200"]
+  filestore:
+    archive: []
+    cache:
+      [
+        "s3://${INTERNAL_FILESTORE_ACCESS}:${INTERNAL_FILESTORE_KEY}@filestore:9000?s3_bucket=al-cache&use_ssl=False",
+      ]
+    storage:
+      [
+        "s3://${INTERNAL_FILESTORE_ACCESS}:${INTERNAL_FILESTORE_KEY}@filestore:9000?s3_bucket=al-storage&use_ssl=False",
+      ]
+  logging:
+    log_to_console: true
+    log_to_file: false
+    log_to_syslog: false
+  retrohunt:
+    enabled: false
+    url: https://hauntedhouse:4443
+    api_key: "${RETROHUNT_API_KEY}"
+    tls_verify: "${ENABLE_INTERNAL_ENCRYPTION}"
+  services:
+    cpu_reservation: 0.60
+  ui:
+    fqdn: "localhost"
+    secret_key: "${FLASK_SECRET_KEY}"
+    # if plugins are defined and enabled
+    # external_sources:
+    # - name: virustotal
+    #   url: http://ui-plugin-lookup-virustotal:8000
+    #   classification:
+    #   max_classification:
+    # - name: malware_bazaar
+    #   url: http://ui-plugin-lookup-malwarebazaar:8000
+    #   classification:
+    #   max_classification:
+
+# Configuration for the elasticsearch instance used for system data.
+# Values an administrator is likely to want to change to scale their deployment are:
+#     replicas
+#     resources
+#     volumeClaimTemplate
+datastore:
+  imageTag: "8.10.2"
+  clusterName: "datastore"
+  createCert: False
+  secret:
+    enabled: false
+  roles:
+    - master
+    - data
+    - data_content
+    - data_hot
+    - data_warm
+    - data_cold
+    # Only if using the same Elasticsearch instance for logging as well
+    # - ingest
+  replicas: 3
+  extraEnvs:
+    - name: ELASTIC_USERNAME
+      value: elastic
+    - name: ELASTIC_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: assemblyline-system-passwords
+          key: datastore-password
+    - name: DATASTORE_SSL_ENABLED
+      valueFrom:
+        configMapKeyRef:
+          name: system-settings
+          key: datastore-ssl-enabled
+    - name: DATASTORE_SSL_KEY
+      valueFrom:
+        configMapKeyRef:
+          name: system-settings
+          key: datastore-ssl-key
+    - name: DATASTORE_SSL_CERTIFICIATE
+      valueFrom:
+        configMapKeyRef:
+          name: system-settings
+          key: datastore-ssl-cert
+  labels:
+    section: core
+    component: datastore
+  protocol: http
+  esJavaOpts: "-Xms4g -Xmx4g -Dlog4j2.formatMsgNoLookups=true"
+  esConfig:
+    elasticsearch.yml: |
+      cluster.deprecation_indexing.enabled: false
+      ingest.geoip.downloader.enabled: false
+      logger.level: WARN
+      # Shut raise logger levels for certain annoying loggers
+      logger.org.elasticsearch.cluster.coordination.ClusterBootstrapService: ERROR
+      logger.com.amazonaws.auth.profile.internal.BasicProfileConfigFileLoader: ERROR
+      logger.org.elasticsearch.cluster.coordination.Coordinator: ERROR
+      logger.org.elasticsearch.deprecation: ERROR
+      logger.org.elasticsearch.xpack.ml.inference.loadingservice.ModelLoadingService: ERROR
+      xpack.security.enabled: true
+      xpack.security.transport.ssl.enabled: true
+      xpack.security.transport.ssl.verification_mode: certificate
+      xpack.security.transport.ssl.keystore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+      xpack.security.transport.ssl.truststore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+      # Below configurations are used when `enableInternalEncryption: true`
+      # xpack.security.http.ssl.enabled: ${DATASTORE_SSL_ENABLED}
+      # xpack.security.http.ssl.verification_mode: full
+      # xpack.security.http.ssl.key: ${DATASTORE_SSL_KEY}
+      # xpack.security.http.ssl.certificate: ${DATASTORE_SSL_CERTIFICIATE}
+  resources:
+    requests:
+      cpu: 1
+      memory: 5Gi
+    limits:
+      cpu: 4
+      memory: 6Gi
+  volumeClaimTemplate:
+    accessModes: ["ReadWriteOnce"]
+    storageClassName: default
+    resources:
+      requests:
+        storage: 500Gi
+  priorityClassName: "al-infra"
+  extraInitContainers: |
+    - name: create-certs
+      env:
+      - name: SECRET_KEY
+        valueFrom:
+          secretKeyRef:
+            name: elastic-helper-secret
+            key: password
+      image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+      command: ['bash', '-c', 'cd /data/ && curl --retry 30 --retry-connrefused --retry-delay 30 -k -H "Authorization: Bearer $SECRET_KEY" -O https://elastic-helper:8000/elastic-stack-ca.p12 && curl --retry 30 --retry-connrefused --retry-delay 30 -k -H "Authorization: Bearer $SECRET_KEY" -O https://elastic-helper:8000/elastic-certificates.p12 && ls -la']
+      securityContext:
+        allowPrivilegeEscalation: false
+        runAsNonRoot: true
+        capabilities:
+          drop: ["ALL"]
+        seccompProfile:
+          type: RuntimeDefault
+      volumeMounts:
+        - name: elastic-certificates
+          mountPath: /data/
+  extraVolumes: |
+    - name: elastic-certificates
+      emptyDir: {}
+  extraVolumeMounts: |
+    - name: elastic-certificates
+      mountPath: /usr/share/elasticsearch/config/certs
+
+filebeat:
+  labels:
+    section: core
+    component: filebeat
+  extraPorts:
+    - name: beats
+      containerPort: 5044
+  extraEnvs:
+    - name: ELASTICSEARCH_HOSTS
+      valueFrom:
+        configMapKeyRef:
+          name: system-settings
+          key: logging-host
+    - name: ELASTICSEARCH_USERNAME
+      valueFrom:
+        configMapKeyRef:
+          name: system-settings
+          key: logging-username
+    - name: ELASTICSEARCH_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: assemblyline-system-passwords
+          key: logging-password
+    - name: ELASTICSEARCH_PROTOCOL
+      valueFrom:
+        configMapKeyRef:
+          name: system-settings
+          key: logging-protocol
+    - name: ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES
+      valueFrom:
+        configMapKeyRef:
+          name: system-settings
+          key: logging-ca
+    - name: LOGGING_TLS_VERIFY
+      valueFrom:
+        configMapKeyRef:
+          name: system-settings
+          key: logging-tls-verify
+    - name: NODE_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: spec.nodeName
+  filebeatConfig:
+    filebeat.yml: |-
+      logging:
+        level: warning
+        json: true
+      name: ${NODE_NAME}
+
+      filebeat.inputs:
+        - type: container
+          stream: "all"
+          paths:
+            - "/var/log/containers/*.log"
+          json:
+            keys_under_root: true
+            message_key: message
+            ignore_decoding_error: true
+
+      processors:
+        - add_cloud_metadata: ~
+        - add_host_metadata: ~
+        - add_docker_metadata: ~
+        - add_kubernetes_metadata:
+            host: ${NODE_NAME}
+            matchers:
+            - logs_path:
+                logs_path: "/var/log/containers/"
+        - drop_event:
+            when:
+              not:
+                equals:
+                  kubernetes.labels.app: assemblyline
+
+      output.elasticsearch:
+        hosts: ["datastore-master:9200"]
+        username: ${ELASTICSEARCH_USERNAME}
+        password: ${ELASTICSEARCH_PASSWORD}
+        protocol: ${ELASTICSEARCH_PROTOCOL}
+        ssl.certificate_authorities: '${ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES:[]}'
+
+      setup.template.settings:
+        index.number_of_shards: 1
+        index.number_of_replicas: 0
+
+      setup.ilm:
+        enabled: true
+        policy_file: /usr/share/filebeat/filebeat_policy.json
+
+    filebeat_policy.json: |-
+      {
+        "policy": {
+          "phases": {
+            "hot": {
+              "min_age": "0ms",
+              "actions": {
+                "rollover": {
+                  "max_age": "1d",
+                  "max_size": "20gb"
+                },
+                "set_priority": {
+                  "priority": 100
+                }
+              }
+            },
+            "warm": {
+              "actions": {
+                "readonly": {},
+                "set_priority": {
+                  "priority": 50
+                }
+              }
+            },
+            "delete": {
+              "min_age": "3d",
+              "actions": {
+                "delete": {}
+              }
+            }
+          }
+        }
+      }
+
+metricbeatIndexPrefix: "metricbeat"
+
+metricbeat:
+  # Version of kube-state-metrics is not compatible with Assemblyline
+  kube_state_metrics:
+    enabled: false
+  labels:
+    section: core
+    component: metricbeat
+  deployment:
+    extraVolumeMounts:
+      - name: dockersock
+        mountPath: /var/run/docker.sock
+    extraVolumes:
+      - name: dockersock
+        hostPath:
+          path: /var/run/docker.sock
+    extraEnvs:
+      - name: ELASTICSEARCH_HOSTS
+        valueFrom:
+          configMapKeyRef:
+            name: system-settings
+            key: logging-host
+      - name: ELASTICSEARCH_USERNAME
+        valueFrom:
+          configMapKeyRef:
+            name: system-settings
+            key: logging-username
+      - name: ELASTICSEARCH_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: assemblyline-system-passwords
+            key: logging-password
+      - name: ELASTICSEARCH_PROTOCOL
+        valueFrom:
+          configMapKeyRef:
+            name: system-settings
+            key: logging-protocol
+      - name: ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES
+        valueFrom:
+          configMapKeyRef:
+            name: system-settings
+            key: logging-ca
+      - name: LOGGING_TLS_VERIFY
+        valueFrom:
+          configMapKeyRef:
+            name: system-settings
+            key: logging-tls-verify
+      - name: METRICBEAT_INDEX
+        valueFrom:
+          configMapKeyRef:
+            name: system-settings
+            key: metricbeat-index-prefix
+      - name: NODE_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: spec.nodeName
+  daemonset:
+    extraEnvs:
+      - name: ELASTICSEARCH_HOSTS
+        valueFrom:
+          configMapKeyRef:
+            name: system-settings
+            key: logging-host
+      - name: ELASTICSEARCH_USERNAME
+        valueFrom:
+          configMapKeyRef:
+            name: system-settings
+            key: logging-username
+      - name: ELASTICSEARCH_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: assemblyline-system-passwords
+            key: logging-password
+      - name: ELASTICSEARCH_PROTOCOL
+        valueFrom:
+          configMapKeyRef:
+            name: system-settings
+            key: logging-protocol
+      - name: ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES
+        valueFrom:
+          configMapKeyRef:
+            name: system-settings
+            key: logging-ca
+      - name: LOGGING_TLS_VERIFY
+        valueFrom:
+          configMapKeyRef:
+            name: system-settings
+            key: logging-tls-verify
+      - name: METRICBEAT_INDEX
+        valueFrom:
+          configMapKeyRef:
+            name: system-settings
+            key: metricbeat-index-prefix
+      - name: NODE_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: spec.nodeName
+  metricbeatConfig:
+    # Configuration on the daemonset
+    metricbeat.yml: |
+      logging:
+        level: warning
+        json: true
+      name: ${NODE_NAME}
+
+      metricbeat.modules:
+        - module: system
+          period: 10s
+          metricsets:
+            - cpu
+            - load
+            - memory
+            - network
+            - process
+            - process_summary
+            - uptime
+            - socket_summary
+            - socket
+          processes: [".*"]
+          cpu.metrics:  ["percentages"]
+          core.metrics: ["percentages"]
+          process.include_top_n:
+            by_cpu: 5      # include top 5 processes by CPU
+            by_memory: 5   # include top 5 processes by memory
+        - module: system
+          period: 1m
+          metricsets:
+            - diskio
+            - fsstat
+        - module: docker
+          metricsets:
+            - "container"
+            - "cpu"
+            - "diskio"
+            - "event"
+            - "healthcheck"
+            - "info"
+            - "memory"
+            - "network"
+          hosts: ["unix:///var/run/docker.sock"]
+          period: 10s
+          enabled: true
+          processors:
+            - add_docker_metadata: ~
+        - module: kubernetes
+          add_metadata: true
+          metricsets:
+            - node
+            - system
+            - pod
+            - container
+            - volume
+          period: 10s
+          host: ${NODE_NAME}
+          hosts: ["https://${NODE_NAME}:10250"]
+          bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+          ssl.verification_mode: "none"
+
+      processors:
+        - add_cloud_metadata: ~
+
+      output.elasticsearch:
+        hosts: ['${ELASTICSEARCH_HOSTS:elasticsearch}']
+        username: ${ELASTICSEARCH_USERNAME}
+        password: ${ELASTICSEARCH_PASSWORD}
+        index: "${METRICBEAT_INDEX}-%{[agent.version]}-%{+yyyy.MM.dd}"
+        protocol: ${ELASTICSEARCH_PROTOCOL:http}
+        ssl:
+          verification_mode: ${LOGGING_TLS_VERIFY:full}
+          certificate_authorities: ${ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES:[]}
+
+      setup.template.name: "${METRICBEAT_INDEX}"
+      setup.template.pattern: "${METRICBEAT_INDEX}-*"
+
+      setup.template.settings:
+        index.number_of_shards: 1
+        index.number_of_replicas: 0
+      setup.ilm:
+        enabled: true
+        rollover_alias: ${METRICBEAT_INDEX}
+        policy_file: /usr/share/metricbeat/metricbeat_policy.json
+
+    # Configuration on the deployment
+    kube-state-metrics-metricbeat.yml: |
+      logging:
+        level: warning
+        json: true
+      name: ${NODE_NAME}
+
+      metricbeat.modules:
+        - module: redis
+          metricsets:
+            - "info"
+            - "keyspace"
+          period: 10s
+          hosts: ["redis-volatile:6379"]
+        - module: redis
+          metricsets:
+            - "info"
+            - "keyspace"
+          period: 10s
+          hosts: ["redis-persistent:6379"]
+
+      processors:
+        - add_cloud_metadata: ~
+
+      output.elasticsearch:
+        hosts: ['${ELASTICSEARCH_HOSTS:elasticsearch}']
+        username: ${ELASTICSEARCH_USERNAME}
+        password: ${ELASTICSEARCH_PASSWORD}
+        index: "${METRICBEAT_INDEX}-%{[agent.version]}-%{+yyyy.MM.dd}"
+        protocol: ${ELASTICSEARCH_PROTOCOL:http}
+        ssl:
+          verification_mode: ${LOGGING_TLS_VERIFY:full}
+          certificate_authorities: '${ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES:[]}'
+
+      setup.template.name: "${METRICBEAT_INDEX}"
+      setup.template.pattern: "${METRICBEAT_INDEX}-*"
+
+      setup.template.settings:
+        index.number_of_shards: 1
+        index.number_of_replicas: 0
+      setup.ilm:
+        enabled: true
+        rollover_alias: ${METRICBEAT_INDEX}
+        policy_file: /usr/share/metricbeat/metricbeat_policy.json
+
+    metricbeat_policy.json: |-
+      {
+        "policy": {
+          "phases": {
+            "hot": {
+              "min_age": "0ms",
+              "actions": {
+                "rollover": {
+                  "max_age": "1d",
+                  "max_size": "5gb"
+                },
+                "set_priority": {
+                  "priority": 100
+                }
+              }
+            },
+            "warm": {
+              "actions": {
+                "readonly": {},
+                "set_priority": {
+                  "priority": 50
+                }
+              }
+            },
+            "delete": {
+              "min_age": "4d",
+              "actions": {
+                "delete": {}
+              }
+            }
+          }
+        }
+      }
+
+kibana:
+  fullnameOverride: kibana
+  elasticsearchHosts: http://log-storage-master:9200
+  healthCheckPath: /kibana/app/kibana
+  imageTag: "8.10.2"
+  labels:
+    section: core
+  service:
+    labels:
+      section: core
+  extraEnvs:
+    - name: SERVER_NAME
+      value: localhost
+    - name: ELASTICSEARCH_SERVICEACCOUNTTOKEN
+      valueFrom:
+        secretKeyRef:
+          name: kibana-service-token
+          key: token
+    - name: ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES
+      valueFrom:
+        configMapKeyRef:
+          name: system-settings
+          key: logging-ca
+    - name: SERVER_BASEPATH
+      value: /kibana
+    - name: SERVER_PUBLICBASEURL
+      value: https://localhost/kibana
+    - name: SERVER_REWRITEBASEPATH
+      value: "true"
+    - name: LOGGING_QUIET
+      value: "true"
+  priorityClassName: al-core-priority
+  kibanaConfig:
+    kibana.yml: |
+      elasticsearch:
+        hosts: ['${ELASTICSEARCH_HOSTS}']
+        serviceAccountToken: '${ELASTICSEARCH_SERVICEACCOUNTTOKEN}'
+      # Below configurations are used when `enableInternalEncryption: true`
+      #   ssl.certificateAuthorities: '${ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES:[]}'
+      # server.ssl:
+      #   enabled: true
+      #   certificate: /etc/certs/kibana/tls.crt
+      #   key: /etc/certs/kibana/tls.key
+      #   certificateAuthorities: /etc/certs/ca.crt
+
+# Configuration for the internal logging elasticsearch instance, only used
+# if the internal logging flag is set
+log-storage:
+  imageTag: "8.10.2"
+  clusterName: "log-storage"
+  createCert: False
+  secret:
+    enabled: false
+  roles:
+    - master
+    - data
+    - data_content
+    - data_hot
+    - data_warm
+    - data_cold
+    - ingest
+  replicas: 1
+  extraEnvs:
+    - name: ELASTIC_USERNAME
+      value: elastic
+    - name: ELASTIC_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: assemblyline-system-passwords
+          key: logging-password
+    - name: LOGGING_SSL_ENABLED
+      valueFrom:
+        configMapKeyRef:
+          name: system-settings
+          key: logging-ssl-enabled
+    - name: LOGGING_SSL_KEY
+      valueFrom:
+        configMapKeyRef:
+          name: system-settings
+          key: logging-ssl-key
+    - name: LOGGING_SSL_CERTIFICIATE
+      valueFrom:
+        configMapKeyRef:
+          name: system-settings
+          key: logging-ssl-cert
+  labels:
+    section: core
+    component: log-storage
+  esJavaOpts: "-Xms4g -Xmx4g -Dlog4j2.formatMsgNoLookups=true"
+  protocol: http
+  esConfig:
+    elasticsearch.yml: |
+      cluster.deprecation_indexing.enabled: false
+      logger.level: WARN
+      # Shut raise logger levels for certain annoying loggers
+      logger.org.elasticsearch.cluster.coordination.ClusterBootstrapService: ERROR
+      logger.com.amazonaws.auth.profile.internal.BasicProfileConfigFileLoader: ERROR
+      logger.org.elasticsearch.cluster.coordination.Coordinator: ERROR
+      logger.org.elasticsearch.deprecation: ERROR
+      logger.org.elasticsearch.xpack.ml.inference.loadingservice.ModelLoadingService: ERROR
+      xpack.security.enabled: true
+      xpack.security.transport.ssl.enabled: true
+      xpack.security.transport.ssl.verification_mode: certificate
+      xpack.security.transport.ssl.keystore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+      xpack.security.transport.ssl.truststore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+      # Below configurations are used when `enableInternalEncryption: true`
+      # xpack.security.http.ssl.enabled: ${LOGGING_SSL_ENABLED}
+      # xpack.security.http.ssl.verification_mode: full
+      # xpack.security.http.ssl.key: ${LOGGING_SSL_KEY}
+      # xpack.security.http.ssl.certificate: ${LOGGING_SSL_CERTIFICIATE}
+  resources:
+    requests:
+      cpu: 1
+      memory: 5Gi
+    limits:
+      cpu: 6
+      memory: 6Gi
+  volumeClaimTemplate:
+    accessModes: ["ReadWriteOnce"]
+    storageClassName: default
+    resources:
+      requests:
+        storage: 500Gi
+  priorityClassName: "al-infra"
+  extraInitContainers: |
+    - name: create-certs
+      env:
+      - name: SECRET_KEY
+        valueFrom:
+          secretKeyRef:
+            name: elastic-helper-secret
+            key: password
+      image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+      command: ['bash', '-c', 'cd /data/; curl --retry 30 --retry-delay 30 -k -H "Authorization: Bearer $SECRET_KEY" -O https://elastic-helper:8000/elastic-stack-ca.p12; curl --retry 30 --retry-delay 30 -k -H "Authorization: Bearer $SECRET_KEY" -O https://elastic-helper:8000/elastic-certificates.p12; ls -la']
+      volumeMounts:
+        - name: elastic-certificates
+          mountPath: /data/
+  extraVolumes: |
+    - name: elastic-certificates
+      emptyDir: {}
+  extraVolumeMounts: |
+    - name: elastic-certificates
+      mountPath: /usr/share/elasticsearch/config/certs
+
+filestore:
+  fullnameOverride: "filestore"
+  podLabels:
+    section: core
+    component: filestore
+  existingSecret: internal-filestore-keys
+
+uiPlugins:
+  lookup:
+    enabled: false
+    plugins:
+      malwarebazaar:
+        enabled: false
+        image: cccs/assemblyline-ui-plugin-lookup-malwarebazaar
+        imageTag:
+        instances: 1
+        reqCPU: 250m
+        reqRam: 256Mi
+        limRam: 256Mi
+        containerPort: 8000
+        # supply an existing configMap
+        configMapName:
+        # or define your own configMap contents
+        configMapData: |-
+          MB_VERIFY: "true"
+          MB_MAX_LIMIT: "100"
+          MAX_TIMEOUT: "3"
+          API_URL: "https://mb-api.abuse.ch/api/v1"
+          FRONTEND_URL: "https://bazaar.abuse.ch/browse.php"
+          CLASSIFICATION: ""
+        serviceAccountName: default
+        securityContext:
+          user: 1000
+          group: 1000
+          fsGroup: 1000
+      virustotal:
+        enabled: false
+        image: cccs/assemblyline-ui-plugin-lookup-virustotal
+        imageTag:
+        instances: 1
+        reqCPU: 250m
+        reqRam: 256Mi
+        limRam: 256Mi
+        containerPort: 8000
+        configMapData: |-
+          VT_VERIFY: "true"
+          MAX_TIMEOUT: "3"
+          API_URL: "https://www.virustotal.com/api/v3"
+          FRONTEND_URL: "https://www.virustotal.com/gui/search"
+          CLASSIFICATION: ""
+        # define your own configMap contents
+        secretData: |-
+          VT_API_KEY: ""
+        # or supply an existing secret to expose all keys
+        secretName:
+        # or individually use keys from existing secrets
+        # supplied as a list, eg:
+        # - varName: VT_API_KEY
+        #   secretName: ui-plugin-lookup-virustotal-apikey
+        #   secretKey: API_KEY
+        secretKeys: []
+        serviceAccountName: default
+        securityContext:
+          user: 1000
+          group: 1000
+          fsGroup: 1000

@@ -1,0 +1,190 @@
+{{ if or (and .Release.IsInstall (eq .Values.createAdminAccount "on-install")) (eq .Values.createAdminAccount "always") }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bootstrap-admin-account
+  labels:
+    section: core
+spec:
+  template:
+    metadata:
+      labels:
+        app: assemblyline
+        section: core
+        component: bootstrap
+        {{ include "assemblyline.coreLabels" . | indent 8 }}
+    spec:
+      serviceAccountName: {{ .Values.coreServiceAccountName }}
+      affinity:
+        nodeAffinity:
+          {{ include "assemblyline.nodeAffinity" . | indent 10 }}
+      tolerations:
+        {{ include "assemblyline.tolerations" . | indent 8 }}
+      containers:
+      - name: pi
+        image: {{ .Values.assemblylineCoreImage }}:{{ .Values.release }}
+        securityContext:
+          {{ include "assemblyline.coreSecurityContext" . | indent 10 }}
+        command: ["python",  "/mount/bootstrap.py"]
+        env:
+          - name: INITIAL_ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: assemblyline-system-passwords
+                key: initial-admin-password
+          - name: LOGGING_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: assemblyline-system-passwords
+                key: logging-password
+          - name: ELASTIC_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: assemblyline-system-passwords
+                key: datastore-password
+          - name: FILESTORE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: assemblyline-system-passwords
+                key: filestore-password
+        volumeMounts:
+          {{ include "assemblyline.coreMounts" . | indent 10 }}
+          - name: script-volume
+            mountPath: /mount
+        resources:
+          requests:
+            cpu: {{ .Values.installJobReqCPU }}
+            memory: {{ .Values.installJobReqRam }}
+          limits:
+            cpu: {{ .Values.installJobLimCPU }}
+            memory: {{ .Values.installJobLimRam }}
+      volumes:
+       {{ include "assemblyline.coreVolumes" . | indent 8 }}
+        - name: script-volume
+          configMap:
+            name: {{ .Release.Name }}-bootstrap-script
+            items:
+              - key: bootstrap.py
+                path: bootstrap.py
+      restartPolicy: Never
+  backoffLimit: 500
+  ttlSecondsAfterFinished: 300
+{{ end }}
+---
+#
+#   Launch services so that they auto-install
+#
+{{ if .Release.IsInstall }}
+{{- range .Values.autoInstallServices }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: install-alsvc-{{ . }}
+  labels:
+    app: assemblyline-{{ $.Release.Name }}
+    section: service
+spec:
+  template:
+    metadata:
+      labels:
+        app: assemblyline-{{ $.Release.Name }}
+        section: service
+        privilege: core
+        component: alsvc_{{ . }}
+    spec:
+      serviceAccountName: {{ $.Values.privilegedServiceAccountName }}
+      affinity:
+        nodeAffinity:
+          {{ include "assemblyline.nodeAffinity" $ | indent 10 }}
+      tolerations:
+        {{ include "assemblyline.tolerations" $ | indent 8 }}
+      containers:
+      - name: install-alsvc-{{- . }}
+        image: {{ $.Values.assemblylineServiceImagePrefix }}{{ . }}:{{ $.Values.assemblylineServiceVersion }}
+        securityContext:
+          {{ include "assemblyline.coreSecurityContext" $ | indent 10 }}
+        imagePullPolicy: Always
+        env:
+          - name: PRIVILEGED
+            value: "true"
+          - name: REGISTER_ONLY
+            value: 'True'
+        {{ include "assemblyline.coreEnv" $ | indent 10 }}
+        resources:
+          requests:
+            cpu: {{ $.Values.installJobReqCPU }}
+            memory: {{ $.Values.installJobReqRam }}
+          limits:
+            cpu: {{ $.Values.installJobLimCPU }}
+            memory: {{ $.Values.installJobLimRam }}
+        volumeMounts:
+        {{ include "assemblyline.coreMounts" $ | indent 10 }}
+      volumes:
+      {{ include "assemblyline.coreVolumes" $ | indent 8 }}
+      restartPolicy: Never
+  backoffLimit: 500
+  ttlSecondsAfterFinished: 300
+---
+{{- end }}
+{{ end }}
+{{ if .Values.internalELKStack }}
+{{ $kibana_token_data := (lookup "v1" "Secret" .Release.Namespace "kibana-service-token").data }}
+{{ if and $kibana_token_data (eq $kibana_token_data.token "") }}
+ # If we're deploying Kibana and the service account token hasn't been initialized, then start job
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: init-kibana-service-token
+  labels:
+    section: core
+spec:
+  template:
+    metadata:
+      labels:
+        app: assemblyline
+        section: core
+        component: kibana-bootstrap
+        {{ include "assemblyline.coreLabels" . | indent 8 }}
+    spec:
+      serviceAccountName: {{ .Release.Name }}-scaling-manager
+      affinity:
+        nodeAffinity:
+          {{ include "assemblyline.nodeAffinity" . | indent 10 }}
+      tolerations:
+        {{ include "assemblyline.tolerations" . | indent 8 }}
+      containers:
+        - name: pi
+          image: {{ .Values.assemblylineCoreImage }}:{{ .Values.release }}
+          securityContext:
+            {{ include "assemblyline.coreSecurityContext" . | indent 12 }}
+          command: ["python",  "/mount/create_serviceaccount_token.py"]
+          env:
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: LOGGING_BASEURL
+              value: {{ .Values.kibana.elasticsearchHosts }}
+          {{ include "assemblyline.coreEnv" . | indent 12 }}
+          volumeMounts:
+            - name: init-script
+              mountPath: "/mount"
+          {{ include "assemblyline.coreMounts" . | indent 12 }}
+          resources:
+            requests:
+              cpu: {{ .Values.installJobReqCPU }}
+              memory: {{ .Values.installJobReqRam }}
+            limits:
+              cpu: {{ .Values.installJobLimCPU }}
+              memory: {{ .Values.installJobLimRam }}
+      volumes:
+        - name: init-script
+          configMap:
+            name: init-kibana-token
+            items:
+              - key: create_serviceaccount_token.py
+                path: create_serviceaccount_token.py
+      {{ include "assemblyline.coreVolumes" . | indent 8 }}
+      restartPolicy: Never
+  backoffLimit: 500
+  ttlSecondsAfterFinished: 300
+{{ end }}
+{{ end }}

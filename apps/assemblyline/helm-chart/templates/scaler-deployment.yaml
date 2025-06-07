@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scaler
+  labels:
+    app: assemblyline
+    section: core
+    component: scaler
+spec:
+  replicas: 1
+  revisionHistoryLimit: {{ .Values.revisionCount }}
+  selector:
+    matchLabels:
+      app: assemblyline
+      section: core
+      component: scaler
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ .Values.configuration | toYaml | sha256sum }}
+      labels:
+        app: assemblyline
+        section: core
+        component: scaler
+        {{ include "assemblyline.coreLabels" . | indent 8 }}
+    spec:
+      serviceAccountName: {{ .Release.Name }}-scaling-manager
+      priorityClassName: al-core-priority
+      affinity:
+        nodeAffinity:
+          {{ include "assemblyline.nodeAffinity" . | indent 10 }}
+      tolerations:
+        {{ include "assemblyline.tolerations" . | indent 8 }}
+      containers:
+        - name: scaler
+          image: {{ .Values.assemblylineCoreImage }}:{{ .Values.release }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          {{ if .Values.enableCoreDebugging}}
+          command: ['python', '-m', 'debugpy', '--listen', 'localhost:5678', '-m', 'assemblyline_core.scaler.run_scaler']
+          {{ else }}
+          command: ['python', '-m', 'assemblyline_core.scaler.run_scaler']
+          {{ end}}
+          securityContext:
+            {{ include "assemblyline.coreSecurityContext" . | indent 12 }}          
+          volumeMounts:
+          {{ include "assemblyline.coreMounts" . | indent 12 }}
+          {{if .Values.enableInternalEncryption }}
+            - name: root-cert
+              mountPath: "/etc/assemblyline/ssl/al_root-ca.key"
+              subPath: tls.key
+              readOnly: true
+          {{ end }}
+          env:
+          {{ include "assemblyline.coreEnv" . | indent 12 }}
+            - name: KUBERNETES_AL_CONFIG
+              value: {{ .Release.Name }}-global-config
+            - name: RELEASE_NAME
+              value: {{ .Release.Name }}
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: SERVICE_API_HOST
+              value: {{ if .Values.enableInternalEncryption }}https{{ else }}http{{ end }}://service-server:5003
+            - name: CONFIGURATION_CONFIGMAP
+              value: {{ .Release.Name }}-global-config
+            - name: PRIVILEGED_SERVICE_ACCOUNT_NAME
+              value: {{ .Values.privilegedServiceAccountName }}
+            - name: UNPRIVILEGED_SERVICE_ACCOUNT_NAME
+              value: {{ .Values.unprivilegedServiceAccountName }}
+          resources:
+            limits:
+              cpu: {{ .Values.scalerLimCPU }}
+              memory: {{ .Values.scalerLimRam }}
+            requests:
+              cpu: {{ .Values.scalerReqCPU }}
+              memory: {{ .Values.scalerReqRam }}
+#          livenessProbe:
+#            exec:
+#              command: [ "bash", "-c", "if [[ ! `find /tmp/heartbeat -newermt '-30 seconds'` ]]; then false; fi" ]
+#            initialDelaySeconds: 30
+#            periodSeconds: 30
+      volumes:
+      {{ include "assemblyline.coreVolumes" . | indent 8 }}

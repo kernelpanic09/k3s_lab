@@ -1,0 +1,21 @@
+dependencies:
+- name: elasticsearch
+  repository: https://helm.elastic.co/
+  version: 8.5.1
+- name: filebeat
+  repository: https://helm.elastic.co/
+  version: 7.17.3
+- name: metricbeat
+  repository: https://helm.elastic.co/
+  version: 7.17.3
+- name: elasticsearch
+  repository: https://helm.elastic.co/
+  version: 8.5.1
+- name: kibana
+  repository: https://helm.elastic.co/
+  version: 7.17.3
+- name: minio
+  repository: https://helm.min.io/
+  version: 5.0.32
+digest: sha256:1c8032e6bbe695e84b5c92c0c6c8a13c96517edee35a967f3d560551d4360ad1
+generated: "2023-10-06T18:25:11.347382418Z"

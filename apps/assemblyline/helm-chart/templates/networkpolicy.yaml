@@ -1,0 +1,226 @@
+# Allow all core pods to talk to other pods
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-between-core
+  labels:
+    app: assemblyline
+spec:
+  podSelector:
+    matchLabels:
+      section: core
+  # Connections may come in from other core pods
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          section: core
+  # Connections may go out to anywhere
+  egress:
+  - to: []
+{{ if $.Values.privilegedSafelistedCIDRs }}
+---
+# Allow access to specific IPs
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: privileged-safelisted-ipblocks
+  labels:
+    app: assemblyline
+spec:
+  podSelector:
+    matchLabels:
+      privilege: core
+  egress:
+  - to:
+    {{- range $.Values.privilegedSafelistedCIDRs }}
+    - ipBlock:
+        cidr: {{ . }}
+    {{- end }} 
+{{end}}
+---
+# Allow privileged services to reach core components
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-privileged-to-core
+  labels:
+    app: assemblyline
+spec:
+  podSelector:
+    matchLabels:
+      privilege: core
+  egress:
+  - to:
+    - podSelector:
+          matchLabels:
+            section: core
+---
+# Allow Core components to recieve connection from privileged services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-core-from-privileged
+  labels:
+    app: assemblyline
+spec:
+  podSelector:
+    matchLabels:
+      section: core
+  ingress:
+  - from:
+    - podSelector:
+          matchLabels:
+            privilege: core
+---
+# Allow pods to access DNS
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns
+  labels:
+    app: assemblyline
+spec:
+  # For all pods in the given namespace
+  podSelector:
+    matchLabels:
+  # Allow egress to the dns service in the system namespace
+  egress:
+  - ports:
+      - port: 53
+        protocol: UDP
+      - port: 53
+        protocol: TCP
+#  - to:  # It would be better to use this more specific selection, but its not broadly supported
+#    - namespaceSelector:
+#        matchLabels:
+#          name: kube-system
+#      podSelector:
+#        matchLabels:
+#          k8s-app: kube-dns
+---
+# Allow all ingress traffic to Frontend/UI/UI-ingest/socket-io/service-api
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-into-endpoints
+spec:
+  # For the matched services
+  podSelector:
+    matchLabels:
+      section: core
+    matchExpressions:
+    - key: component
+      operator: In
+      values: {{ if .Values.separateIngestAPI }} [frontend, ui, ui-ingest, socketio, service-server] {{else}} [frontend, ui, socketio, service-server] {{end}}
+  # Allow ingress from all sources, regardless of origin
+  ingress:
+  - from: []
+---
+# Allow all ingress traffic to logstash
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-into-logstash
+spec:
+  # For the matched services
+  podSelector:
+    matchLabels:
+      component: logstash
+      section: core
+  # Allow ingress from all sources, regardless of origin
+  ingress:
+  - from: []
+---
+# services to contact the service-server
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-service-api
+spec:
+  # For all pods in the service namespace
+  podSelector:
+    matchLabels:
+      section: service
+  # Allow traffic to
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          section: core
+          component: service-server
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Release.Name }}-allow-state-metrics
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: kube-state-metrics
+  egress:
+  - to: []
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Release.Name }}-allow-metricbeat-daemon
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ .Release.Name }}-metricbeat-metrics
+  egress:
+  - to: []
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-metrics-output
+spec:
+  podSelector:
+    matchLabels:
+      section: core
+      component: metrics
+  egress:
+  - to: []
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-logstash-output
+spec:
+  podSelector:
+    matchLabels:
+      section: core
+      component: logstash
+  egress:
+  - to: []
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-metricbeat-to-core
+  labels:
+    app: assemblyline
+spec:
+  podSelector:
+    matchLabels:
+      section: core
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: {{ .Release.Name }}-metricbeat-metrics
+---
+# Allow all traffic inbound to kibana
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-into-kibana
+spec:
+  podSelector:
+    matchLabels:
+      section: core
+      app: kibana
+  ingress:
+  - from: []

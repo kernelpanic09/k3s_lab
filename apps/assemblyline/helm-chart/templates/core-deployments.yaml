@@ -1,0 +1,87 @@
+{{with merge (dict "component" "alerter" "command" "assemblyline_core.alerter.run_alerter" "requestedCPU" .Values.alerterReqCPU "limitCPU" .Values.alerterLimCPU "limitRam" .Values.alerterLimRam) . }}
+  {{template "assemblyline.coreService" .}}
+{{end}}
+{{ if .Values.configuration.datastore.archive.enabled }}
+---
+{{with merge (dict "component" "archiver" "command" "assemblyline_core.archiver.run_archiver" "requestedCPU" .Values.archiverReqCPU "limitCPU" .Values.archiverLimCPU "limitRam" .Values.archiverLimRam) . }}
+  {{template "assemblyline.coreService" .}}
+{{end}}
+{{end}}
+---
+{{with merge (dict "component" "workflow" "command" "assemblyline_core.workflow.run_workflow" "requestedCPU" .Values.workflowReqCPU "limitCPU" .Values.workflowLimCPU "limitRam" .Values.workflowLimRam) . }}
+  {{template "assemblyline.coreService" .}}
+{{end}}
+---
+{{with merge (dict "component" "expiry" "command" "assemblyline_core.expiry.run_expiry" "requestedCPU" .Values.expiryReqCPU "limitCPU" .Values.expiryLimCPU "requestedRam" .Values.expiryReqRam "limitRam" .Values.expiryLimRam) . }}
+  {{template "assemblyline.coreService" .}}
+{{end}}
+{{ if .Values.enableMetrics }}
+---
+{{with merge (dict "component" "metrics" "command" "assemblyline_core.metrics.run_metrics_aggregator" "requestedCPU" .Values.metricsReqCPU "limitCPU" .Values.metricsLimCPU "limitRam" .Values.metricsLimRam) . }}
+  {{template "assemblyline.coreServiceNoCheck" .}}
+{{end}}
+{{end}}
+---
+{{with merge (dict "component" "statistics" "command" "assemblyline_core.metrics.run_statistics_aggregator" "requestedCPU" .Values.statisticsReqCPU "limitCPU" .Values.statisticsLimCPU "limitRam" .Values.statisticsLimRam) . }}
+  {{template "assemblyline.coreServiceNoCheck" .}}
+{{end}}
+{{ if .Values.enableMetrics }}
+---
+{{with merge (dict "component" "es-metrics" "command" "assemblyline_core.metrics.es_metrics" "requestedCPU" .Values.esMetricsReqCPU "limitCPU" .Values.esMetricsLimCPU "limitRam" .Values.esMetricsLimRam) . }}
+  {{template "assemblyline.coreService" .}}
+{{end}}
+{{end}}
+---
+{{with merge (dict "component" "heartbeat" "command" "assemblyline_core.metrics.run_heartbeat_manager" "requestedCPU" .Values.heartbeatReqCPU "limitCPU" .Values.heartbeatLimCPU "limitRam" .Values.heartbeatLimRam) . }}
+  {{template "assemblyline.coreService" .}}
+{{end}}
+---
+{{with merge (dict "component" "plumber" "command" "assemblyline_core.plumber.run_plumber" "requestedCPU" .Values.plumberReqCPU "limitCPU" .Values.plumberLimCPU "limitRam" .Values.plumberLimRam) . }}
+  {{template "assemblyline.coreService" .}}
+{{end}}
+---
+{{with merge (dict "component" "dispatcher" "command" "assemblyline_core.dispatching" "terminationSeconds" .Values.disptacherShutdownGrace "replicas" .Values.dispatcherInstances "requestedCPU" .Values.dispatcherReqCPU "limitCPU" .Values.dispatcherLimCPU "requestedRam" .Values.dispatcherReqRam "limitRam" .Values.dispatcherLimRam) . }}
+  {{template "assemblyline.coreService" .}}
+{{end}}
+---
+{{with merge (dict "component" "ingester" "command" "assemblyline_core.ingester" "replicas" .Values.ingesterInstances  "requestedCPU" .Values.ingesterReqCPU "limitCPU" .Values.ingesterLimCPU "limitRam" .Values.ingesterLimRam) . }}
+  {{template "assemblyline.coreService" .}}
+{{end}}
+{{ if .Values.useReplay }}
+---
+{{ if eq .Values.replayMode "creator" }}
+{{with merge (dict "component" "replay-creator" "command" "assemblyline_core.replay.creator.run" "requestedCPU" .Values.replayReqCPU "limitCPU" .Values.replayLimCPU "requestedRam" .Values.replayReqRam "limitRam" .Values.replayLimRam "replayContainer" true "livenessCommand" .Values.replayLivenessCommand) . }}
+  {{template "assemblyline.coreService" .}}
+{{end}}
+{{else}}
+{{with merge (dict "component" "replay-loader" "command" "assemblyline_core.replay.loader.run" "requestedCPU" .Values.replayReqCPU "limitCPU" .Values.replayLimCPU "requestedRam" .Values.replayReqRam "limitRam" .Values.replayLimRam "replayContainer" true "livenessCommand" .Values.replayLivenessCommand "runAsUser" .Values.replayLoaderUser) . }}
+  {{template "assemblyline.coreService" .}}
+{{end}}
+{{end}}
+---
+{{ if eq .Values.replayMode "creator" }}
+{{with merge (dict "component" "replay-creator-worker" "command" "assemblyline_core.replay.creator.run_worker" "requestedCPU" .Values.replayWorkerReqCPU "limitCPU" .Values.replayWorkerLimCPU "requestedRam" .Values.replayWorkerReqRam "limitRam" .Values.replayWorkerLimRam "replayContainer" true "livenessCommand" .Values.replayLivenessCommand) . }}
+  {{template "assemblyline.coreService" .}}
+{{end}}
+{{else}}
+{{with merge (dict "component" "replay-loader-worker" "command" "assemblyline_core.replay.loader.run_worker" "requestedCPU" .Values.replayWorkerReqCPU "limitCPU" .Values.replayWorkerLimCPU "requestedRam" .Values.replayWorkerReqRam "limitRam" .Values.replayWorkerLimRam "replayContainer" true "livenessCommand" .Values.replayLivenessCommand  "runAsUser" .Values.replayLoaderUser) . }}
+  {{template "assemblyline.coreService" .}}
+{{end}}
+{{end}}
+{{end}}
+---
+{{ if .Values.enableVacuum }}
+{{with merge (dict
+    "component" "vacuum-worker"
+    "command" "assemblyline_core.vacuum.worker"
+    "requestedCPU" .Values.vacuumWorkerReqCPU
+    "limitCPU" .Values.vacuumWorkerLimCPU
+    "requestedRam" .Values.vacuumWorkerReqRam
+    "limitRam" .Values.vacuumWorkerLimRam
+    "volumes" .Values.vacuumVolumes
+    "mounts" .Values.vacuumMounts
+    "runAsUser" .Values.vacuumUser
+  ) . }}
+  {{template "assemblyline.coreService" .}}
+{{end}}
+{{ end }}

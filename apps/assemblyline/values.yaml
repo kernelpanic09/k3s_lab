@@ -1,0 +1,27 @@
+# Enable ingress and TLS
+ingressAnnotations:
+  kubernetes.io/ingress.class: "nginx"
+  cert-manager.io/cluster-issuer: "letsencrypt-prod"
+tlsSecretName: "assemblyline-tls"
+
+# Optional: use internal file storage
+internalFilestore: true
+
+# Storage classes
+redisStorageClass: "local-path"
+datastore:
+  volumeClaimTemplate:
+    storageClassName: "local-path"
+log-storage:
+  volumeClaimTemplate:
+    storageClassName: "local-path"
+persistentStorageClass: "local-path"
+
+# Configure Assemblyline FQDN for HTTPS
+configuration:
+  ui:
+    fqdn: "al.codepretzels.com"
+  submission:
+    max_file_size: 104857600
+  logging:
+    log_level: "INFO"

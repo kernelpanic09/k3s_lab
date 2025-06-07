@@ -1,0 +1,189 @@
+# Create a POD/Service for non-persisted redis
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-volatile
+  labels:
+    app: assemblyline
+    section: core
+    component: redis-volatile
+spec:
+  replicas: 1
+  revisionHistoryLimit: {{ .Values.revisionCount }}
+  selector:
+    matchLabels:
+      app: assemblyline
+      section: core
+      component: redis-volatile
+  template:
+    metadata:
+      labels:
+        app: assemblyline
+        section: core
+        component: redis-volatile
+        {{ include "assemblyline.coreLabels" . | indent 8 }}
+    spec:
+      priorityClassName: al-infra
+      serviceAccountName: {{ .Values.coreServiceAccountName }}
+      affinity:
+        nodeAffinity:
+          {{ include "assemblyline.nodeAffinity" . | indent 10 }}
+      securityContext:
+        fsGroup: 1000
+      tolerations:
+        {{ include "assemblyline.tolerations" . | indent 8 }}
+      containers:
+        - name: redis
+          image: {{ .Values.redisImage }}
+          command: ['redis-server']
+          securityContext:
+            {{ include "assemblyline.coreSecurityContext" . | indent 12 }}
+          args: ['--appendonly', 'no', '--maxclients', '100000', '--save', ''{{ if ne (.Values.redisVolatileIOThreads | toString) "1" }}, '--io-threads', '{{ .Values.redisVolatileIOThreads }}'{{ end }} {{if .Values.enableInternalEncryption }}, '--tls-port', '6379', '--port', '0', '--tls-cert-file', '/etc/tls/tls.crt', '--tls-key-file', '/etc/tls/tls.key', '--tls-ca-cert-file', '/etc/root-ca.crt', '--tls-auth-clients', 'no' {{ end }}]
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - containerPort: 6379
+          resources:
+            requests:
+              cpu: {{ .Values.redisVolatileReqCPU }}
+              memory: {{ .Values.redisVolatileReqRam }}
+            limits:
+              cpu: {{ .Values.redisVolatileLimCPU }}
+              memory: {{ .Values.redisVolatileLimRam }}
+          readinessProbe:
+            exec:
+              command: ['bash', '-c', 'if [ "$(timeout 3s redis-cli {{ if .Values.enableInternalEncryption}}--tls --cacert /etc/root-ca.crt {{ end }}ping)" != "PONG" ]; then exit 1; fi']
+            timeoutSeconds: 5
+            periodSeconds: 5
+{{if .Values.enableInternalEncryption }}
+          volumeMounts:
+            - name: redis-cert
+              mountPath: /etc/tls
+            - name: root-cert
+              subPath: tls.crt
+              mountPath: /etc/root-ca.crt
+      volumes:
+        - name: redis-cert
+          secret:
+            secretName: redis-volatile-cert
+        - name: root-cert
+          secret:
+            secretName: {{ .Release.Name }}.internal-generated-ca
+{{ end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-volatile
+  labels:
+    app: assemblyline
+    section: core
+    component: redis-volatile
+spec:
+  clusterIP: None
+  selector:
+    app: assemblyline
+    section: core
+    component: redis-volatile
+  ports:
+  - protocol: TCP
+    port: 6379
+---
+# Create a StatefulSet/Service for persistent redis
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-persistent
+  labels:
+    app: assemblyline
+    section: core
+    component: redis-persistent
+spec:
+  clusterIP: None
+  selector:
+    app: assemblyline
+    section: core
+    component: redis-persistent
+  ports:
+  - protocol: TCP
+    port: 6379
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-persistent
+spec:
+  selector:
+    matchLabels:
+      app: assemblyline
+      section: core
+      component: redis-persistent
+  serviceName: redis-persistent
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: assemblyline
+        section: core
+        component: redis-persistent
+        {{ include "assemblyline.coreLabels" . | indent 8 }}
+    spec:
+      terminationGracePeriodSeconds: 10
+      priorityClassName: al-infra
+      affinity:
+        nodeAffinity:
+          {{ include "assemblyline.nodeAffinity" . | indent 10 }}
+      securityContext:
+        fsGroup: 1000
+      tolerations:
+        {{ include "assemblyline.tolerations" . | indent 8 }}
+      containers:
+      - name: redis
+        image: {{ .Values.redisImage }}
+        command: ['redis-server']
+        securityContext:
+          {{ include "assemblyline.coreSecurityContext" . | indent 12 }}        
+        args: ['--appendonly', 'yes', '--maxclients', '100000', '--auto-aof-rewrite-percentage', '200'{{ if ne (.Values.redisPersistentIOThreads | toString) "1" }}, '--io-threads', '{{ .Values.redisPersistentIOThreads }}'{{ end }} {{if .Values.enableInternalEncryption }}, '--tls-port', '6379', '--port', '0', '--tls-cert-file', '/etc/tls/tls.crt', '--tls-key-file', '/etc/tls/tls.key', '--tls-ca-cert-file', '/etc/root-ca.crt', '--tls-auth-clients', 'no' {{ end }}]
+        ports:
+        - containerPort: 6379
+        readinessProbe:
+          exec:
+            command: ['bash', '-c', 'if [ "$(timeout 3s redis-cli {{ if .Values.enableInternalEncryption}}--tls --cacert /etc/root-ca.crt {{ end }}ping)" != "PONG" ]; then exit 1; fi']
+          timeoutSeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: redis-data
+          mountPath: /var/opt/redislabs/
+        - name: redis-data
+          mountPath: /data
+        {{if .Values.enableInternalEncryption }}
+        - name: redis-cert
+          mountPath: /etc/tls
+        - name: root-cert
+          subPath: tls.crt
+          mountPath: /etc/root-ca.crt
+        {{ end }}
+        resources:
+          limits:
+            cpu: {{ .Values.redisPersistentLimCPU }}
+            memory: {{ .Values.redisPersistentLimRam }}
+          requests:
+            cpu: {{ .Values.redisPersistentReqCPU }}
+            memory: {{ .Values.redisPersistentReqRam }}
+      {{if .Values.enableInternalEncryption }}
+      volumes:
+        - name: redis-cert
+          secret:
+            secretName: redis-persistent-cert
+        - name: root-cert
+          secret:
+            secretName: {{ .Release.Name }}.internal-generated-ca
+      {{ end }}
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: {{ .Values.redisStorageClass }}
+      resources:
+        requests:
+          storage: {{ .Values.redisStorageSize | default "20Gi" }}

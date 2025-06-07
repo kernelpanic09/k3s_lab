@@ -1,0 +1,54 @@
+{{ if .Values.enableAPM }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apm-config
+  labels:
+    k8s-app: apm
+data:
+  apm.yml: |
+    apm-server:
+      host: "0.0.0.0:8200"
+      kibana:
+        enabled: true
+        host: {{ .Values.kibanaHost }}
+        path:
+        username: ${LOGGING_USERNAME}
+        password: ${LOGGING_PASSWORD}
+        ssl:
+          verification_mode: ${LOGGING_TLS_VERIFY}
+          {{ if (and .Values.enableInternalEncryption .Values.internalELKStack) }}
+          certificate_authorities: ['${ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES}']
+          {{ end }}
+
+
+      ilm: {{ printf "\n"}}
+      {{- .Values.apmILM | toYaml | indent 8}}
+
+      {{ if .Values.enableInternalEncryption }}
+      ssl:
+        enabled: true
+        certificate: /etc/certs/http_ssl/tls.crt
+        key: /etc/certs/http_ssl/tls.key
+        client_authentication: none
+      {{ end }}
+
+    logging:
+      level: warning
+      json: true
+
+    output.elasticsearch:
+      hosts: ['${LOGGING_URL}']
+      username: ${LOGGING_USERNAME}
+      password: ${LOGGING_PASSWORD}
+      protocol: ${ELASTICSEARCH_PROTOCOL}
+      ssl:
+        verification_mode: ${LOGGING_TLS_VERIFY}
+        {{ if (and .Values.enableInternalEncryption .Values.internalELKStack) }}
+        certificate_authorities: ['${ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES}']
+        {{ end }}
+
+    setup.template.settings.index:
+      number_of_shards: 1
+      number_of_replicas: 0
+{{end}}

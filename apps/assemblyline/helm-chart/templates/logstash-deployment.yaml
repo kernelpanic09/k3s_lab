@@ -1,0 +1,135 @@
+{{ if .Values.useLogstash }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    section: core
+    component: logstash
+  name: logstash
+spec:
+  replicas: 1
+  revisionHistoryLimit: {{ .Values.revisionCount }}
+  selector:
+    matchLabels:
+      section: core
+      component: logstash
+  template:
+    metadata:
+      labels:
+        component: logstash
+        section: core
+        {{ include "assemblyline.coreLabels" . | indent 8 }}
+      name: logstash
+    spec:
+      serviceAccountName: {{ .Values.coreServiceAccountName }}
+      affinity:
+        nodeAffinity:
+          {{ include "assemblyline.nodeAffinity" . | indent 10 }}
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                component: logstash
+                section: core
+            topologyKey: kubernetes.io/hostname
+      tolerations:
+        {{ include "assemblyline.tolerations" . | indent 8 }}
+      containers:
+      - image: {{ .Values.elasticLogstashImage }}:{{ .Values.elasticLogstashTag }}
+        {{ if .Values.enableInternalEncryption }}
+        command: ["bash", "-c", "mkdir /usr/share/logstash/ssl; openssl pkcs8 -inform PEM -in /usr/share/logstash/ssl_rsa/tls.key -topk8 -nocrypt -outform PEM -out /usr/share/logstash/ssl/tls.key; cp /usr/share/logstash/ssl_rsa/tls.crt /usr/share/logstash/ssl/tls.crt; bin/logstash"]
+        {{ end }}
+        env:
+        {{ include "assemblyline.coreEnv" . | indent 8 }}
+        - name: LS_JAVA_OPTS
+          value: -Xmx1g -Xms1g
+        - name: LOGGING_PROTOCOL
+          valueFrom:
+            configMapKeyRef:
+              name: system-settings
+              key: logging-protocol
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 300
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 3
+          timeoutSeconds: 5
+        name: logstash
+        ports:
+        - containerPort: 9600
+          name: http
+          protocol: TCP
+        - containerPort: 5044
+          name: beats
+          protocol: TCP
+        resources:
+          limits:
+            cpu: {{ .Values.logstashLimCPU }}
+            memory: {{ .Values.logstashLimRam }}
+          requests:
+            cpu: {{ .Values.logstashReqCPU }}
+            memory: {{ .Values.logstashReqRam }}
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+          runAsUser: 1000
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /usr/share/logstash/config/logstash.yml
+          name: logstashconfig
+          subPath: logstash.yml
+        - mountPath: /usr/share/logstash/pipeline/logstash.conf
+          name: logstashpipeline
+          subPath: logstash.conf
+      {{ if .Values.enableInternalEncryption }}
+        - mountPath: /usr/share/logstash/ssl_rsa/
+          name: logstash-cert
+          readOnly: true
+        - mountPath: /etc/certs/ca.crt
+          name: root-ca
+          subPath: tls.crt
+          readOnly: true
+      {{ end }}
+
+{{ if  .Values.logstashMounts  }}{{ .Values.logstashMounts | toYaml | indent 8 }}{{ end }}
+      securityContext:
+        {{ include "assemblyline.coreSecurityContext" . | indent 8 }}
+        fsGroup: 1000
+        runAsUser: 1000
+      terminationGracePeriodSeconds: 120
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: default-logstash-config
+        name: logstashconfig
+      - configMap:
+          defaultMode: 420
+          name: logstash-pipeline
+        name: logstashpipeline
+      {{ if .Values.enableInternalEncryption }}
+      - name: logstash-cert
+        secret:
+          secretName: logstash-cert
+      - name: root-ca
+        secret:
+          secretName: {{ .Release.Name }}.internal-generated-ca
+      {{ end }}
+{{ if  .Values.logstashVolumes }}{{ .Values.logstashVolumes | toYaml | indent 6 }}{{ end }}
+{{ end }}

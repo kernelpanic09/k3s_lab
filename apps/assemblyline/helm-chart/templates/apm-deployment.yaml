@@ -1,0 +1,114 @@
+{{ if .Values.enableAPM }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apm
+  labels:
+    app: assemblyline-apm
+    section: core
+    component: apm
+spec:
+  replicas: 1
+  revisionHistoryLimit: {{ .Values.revisionCount }}
+  selector:
+    matchLabels:
+      app: assemblyline-apm
+      section: core
+      component: apm
+  template:
+    metadata:
+      labels:
+        app: assemblyline-apm
+        section: core
+        component: apm
+        {{ include "assemblyline.coreLabels" . | indent 8 }}
+    spec:
+      priorityClassName: al-core-priority
+      serviceAccountName: {{ .Values.coreServiceAccountName }}
+      affinity:
+        nodeAffinity:
+          {{ include "assemblyline.nodeAffinity" . | indent 10 }}
+      tolerations:
+        {{ include "assemblyline.tolerations" . | indent 8 }}
+      containers:
+        - name: apm
+          image: {{ .Values.elasticAPMImage }}:7.17.3
+#          command: ["/bin/bash", "-c", "/usr/local/bin/docker-entrypoint -e -E output.elasticsearch.password=$$ELASTICSEARCH_PASSWORD"]
+          ports:
+          - containerPort: 8200
+          resources:
+            limits:
+              cpu: {{ .Values.apmLimCPU }}
+              memory: {{ .Values.apmLimRam }}
+            requests:
+              cpu: {{ .Values.apmReqCPU }}
+              memory: {{ .Values.apmReqRam }}
+          env:
+            - name: LOGGING_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: assemblyline-system-passwords
+                  key: logging-password
+            - name: LOGGING_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: system-settings
+                  key: logging-host
+            - name: LOGGING_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: system-settings
+                  key: logging-username
+            - name: LOGGING_TLS_VERIFY
+              valueFrom:
+                configMapKeyRef:
+                  name: system-settings
+                  key: logging-tls-verify
+            - name: ELASTICSEARCH_PROTOCOL
+              valueFrom:
+                configMapKeyRef:
+                  name: system-settings
+                  key: logging-protocol
+            - name: ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES
+              valueFrom:
+                configMapKeyRef:
+                  name: system-settings
+                  key: logging-ca
+          volumeMounts:
+          - name: config
+            mountPath: /usr/share/apm-server/apm-server.yml
+            readOnly: true
+            subPath: apm.yml
+          {{ if .Values.enableInternalEncryption }}
+          - name: root-ca
+            mountPath: /etc/certs/ca.crt
+            readOnly: true
+            subPath: tls.crt
+          - name: apm-cert
+            mountPath: /etc/certs/http_ssl
+            readOnly: true
+          {{ if .Values.internalELKStack }}
+          - name: kibana-cert
+            mountPath: /etc/certs/kibana
+            readOnly: true
+          {{ end }}
+          {{ end }}
+      volumes:
+      - name: config
+        configMap:
+          defaultMode: 0644
+          name: apm-config
+      {{ if .Values.enableInternalEncryption }}
+      - name: apm-cert
+        secret:
+          secretName: apm-cert
+      - name: root-ca
+        secret:
+          secretName: {{ .Release.Name }}.internal-generated-ca
+      {{ if .Values.internalELKStack }}
+      - name: kibana-cert
+        secret:
+          secretName: kibana-cert
+      {{ end }}
+      {{ end}}
+{{ end }}

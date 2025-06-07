@@ -1,0 +1,193 @@
+# {{ required "A configuration.filestore.cache URI needs to be define. See assemblyline manual." .Values.configuration.filestore.cache }}
+# {{ required "A configuration.filestore.storage URI needs to be define. See assemblyline manual." .Values.configuration.filestore.storage }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elasticsearch-indexes
+data:
+  elastic-alert-shards: "{{ .Values.elasticAlertShards }}"
+  elastic-default-replicas: "{{ .Values.elasticDefaultReplicas }}"
+  elastic-default-shards: "{{ .Values.elasticDefaultShards }}"
+  elastic-emptyresult-shards: "{{ .Values.elasticEmptyResultShards }}"
+  elastic-file-shards: "{{ .Values.elasticFileShards }}"
+  elastic-filescore-shards: "{{ .Values.elasticFileScoreShards }}"
+  elastic-result-shards: "{{ .Values.elasticResultShards }}"
+  elastic-safelist-shards: "{{ .Values.elasticSafelistShards }}"
+  elastic-submission-shards: "{{ .Values.elasticSubmissionShards }}"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: system-settings
+data:
+  datastore-ssl-enabled: {{ .Values.enableInternalEncryption | quote }}
+  datastore-ssl-key: {{ if .Values.enableInternalEncryption }}"/usr/share/elasticsearch/config/http_ssl/tls.key"{{ else }}''{{ end }}
+  datastore-ssl-cert: {{ if .Values.enableInternalEncryption }}"/usr/share/elasticsearch/config/http_ssl/tls.crt"{{ else }}''{{ end }}
+  logging-host: {{ if .Values.seperateInternalELKStack}}log-storage-master:9200{{ else if .Values.internalELKStack }}datastore-master:9200{{ else }}{{ .Values.loggingHost | default "localhost:9200" }}{{ end }}
+  logging-username: {{ if .Values.internalELKStack }}elastic{{ else }}{{ .Values.loggingUsername }}{{ end }}
+  logging-tls-verify: {{ .Values.loggingTLSVerify }}
+  logging-ssl-enabled: {{ .Values.enableInternalEncryption | quote }}
+  logging-ssl-key: {{ if .Values.enableInternalEncryption }}"/usr/share/elasticsearch/config/http_ssl/tls.key"{{ else }}''{{ end }}
+  logging-ssl-cert: {{ if .Values.enableInternalEncryption }}"/usr/share/elasticsearch/config/http_ssl/tls.crt"{{ else }}''{{ end }}
+  logging-ca: {{ if .Values.enableInternalEncryption }}"/etc/certs/ca.crt"{{ else }}''{{ end }}
+  logging-protocol: {{ if .Values.enableInternalEncryption }}"https"{{ else }}"http"{{ end }}
+  metricbeat-index-prefix: {{ .Values.metricbeatIndexPrefix }}
+
+
+
+---
+{{ if .Values.enableHSTSHeader }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+data:
+  serve.json: |
+    {
+      "headers": [
+        {
+          "source":"**/*",
+          "headers": [
+              {
+                "key": "Strict-Transport-Security", 
+                "value": "max-age={{ .Values.HSTSMaxAge }};includeSubDomains"
+              }
+          ]
+        }
+      ]
+    }
+---
+{{ end }}
+# The assemblyline config that will be projected into all the assemblyline pods
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-global-config
+data:
+  config: |
+{{ .Values.configuration | toYaml | indent 4 }}
+{{ if .Values.useReplay }}
+---
+# The replay config that will be use in the replay containers
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-replay-config
+data:
+  replay: |
+{{ .Values.replay | toYaml | indent 4 }}
+{{end}}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-bootstrap-script
+data:
+  bootstrap.py: |
+    from assemblyline.odm.models.user_settings import UserSettings
+    from assemblyline.common.security import get_password_hash
+    from assemblyline.odm.models.user import User
+    from assemblyline.common import forge
+    import os
+
+    ADMIN_USER = 'admin'
+    INITIAL_ADMIN_PASSWORD = os.environ['INITIAL_ADMIN_PASSWORD']
+    Classification = forge.get_classification()
+
+    if __name__ == '__main__':
+        ds = forge.get_datastore()
+        if not ds.user.get_if_exists(ADMIN_USER):
+            user_data = User({
+                "agrees_with_tos": "NOW",
+                "classification": Classification.RESTRICTED,
+                "name": "Administrator",
+                "password": get_password_hash(INITIAL_ADMIN_PASSWORD),
+                "uname": ADMIN_USER,
+                "type": [ADMIN_USER, "user", "signature_importer"]})
+            ds.user.save(ADMIN_USER, user_data)
+            ds.user_settings.save(ADMIN_USER, UserSettings())
+            print("Initial user setup finished.")
+        else:
+            print(f"User {ADMIN_USER} already found, system is already setup.")
+  share_certificate.py: |
+    import os
+    import logging
+    from flask import Flask, request, abort
+
+    app = Flask(__name__)
+
+    FILES = {
+        'elastic-certificates.p12': '/data/elastic-certificates.p12',
+        'elastic-stack-ca.p12': '/data/elastic-stack-ca.p12'
+    }
+
+    @app.route("/<filename>")
+    def read_file(filename):
+        if request.headers.get('Authorization', '') != 'Bearer ' + os.environ['SECRET_KEY']:
+            abort(401, 'token refused')
+
+        if filename not in FILES:
+            abort(404)
+
+        return open(FILES[filename], 'rb').read()
+
+    if __name__ == "__main__":
+        logging.basicConfig(level=logging.INFO)
+        app.run(ssl_context='adhoc', host='0.0.0.0', port=8000)
+---
+# The ConfigMap to initialize service account for Kibana
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: init-kibana-token
+data:
+  create_serviceaccount_token.py: |
+    import os
+    import requests
+    from datetime import datetime
+    from kubernetes import client, config
+    from kubernetes.client import V1Secret, V1ObjectMeta
+
+    if __name__ == "__main__":
+      # Try loading a kubernetes connection from either the fact that we are running
+      # inside of a cluster, or have a config file that tells us how
+      try:
+          config.load_incluster_config()
+      except config.config_exception.ConfigException:
+          # Load the configuration once to initialize the defaults
+          config.load_kube_config()
+          # Now we can actually apply any changes we want to make
+          cfg = client.configuration.Configuration(client.configuration.Configuration)
+          if 'HTTPS_PROXY' in os.environ:
+              cfg.proxy = os.environ['HTTPS_PROXY']
+              if not cfg.proxy.startswith("http"):
+                  cfg.proxy = "https://" + cfg.proxy
+              client.Configuration.set_default(cfg)
+          # Load again with our settings set
+          config.load_kube_config(client_configuration=cfg)
+
+      base = os.environ['LOGGING_BASEURL']
+      auth = (os.environ['LOGGING_USERNAME'], os.environ['LOGGING_PASSWORD'])
+      verify = "/etc/assemblyline/ssl/al_root-ca.crt" if os.path.exists("/etc/assemblyline/ssl/al_root-ca.crt") else True
+      # Delete existing token 
+      requests.delete(f"{base}/_security/service/elastic/kibana/credential/token/kibana", auth=auth, verify=verify)
+      # Create a new token 
+      resp = requests.post(f"{base}/_security/service/elastic/kibana/credential/token/kibana", auth=auth, verify=verify).json()
+      core_api = client.CoreV1Api()
+      core_api.patch_namespaced_secret(name="kibana-service-token", namespace=os.getenv('NAMESPACE', 'al'), body=V1Secret(metadata=V1ObjectMeta(name="kibana-service-token"), string_data={"token": resp['token']['value']}))
+      # Restart Kibana deployment
+      now = datetime.utcnow()
+      now = str(now.isoformat("T") + "Z")      
+      body = {
+          'spec': {
+              'template':{
+                  'metadata': {
+                      'annotations': {
+                          'kubectl.kubernetes.io/restartedAt': now
+                      }
+                  }
+              }
+          }
+      }      
+      client.AppsV1Api().patch_namespaced_deployment("kibana", namespace=os.getenv('NAMESPACE', 'al'), body=body, pretty='true')

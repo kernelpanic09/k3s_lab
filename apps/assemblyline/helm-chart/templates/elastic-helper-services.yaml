@@ -1,0 +1,20 @@
+{{ if or .Values.internalDatastore .Values.seperateInternalELKStack}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: elastic-helper
+  labels:
+    app: assemblyline
+    section: core
+    component: elastic-helper
+spec:
+  clusterIP: None
+  selector:
+    app: assemblyline
+    section: core
+    component: elastic-helper
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
+{{ end }}
