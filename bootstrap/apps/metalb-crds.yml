@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metallb-crds
+  namespace: argocd
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  project: default
+  source:
+    repoURL: https://github.com/kernelpanic09/k3s_lab.git
+    targetRevision: HEAD
+    path: bootstrap/platform/metallb-crds
+    directory:
+      recurse: true
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true

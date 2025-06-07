@@ -1,9 +1,0 @@
-apiVersion: builtin
-kind: AnnotationsTransformer
-metadata:
-  name: argocd-wave
-annotations:
-  argocd.argoproj.io/sync-wave: "-1"
-fieldSpecs:
-  - kind: CustomResourceDefinition
-    path: metadata/annotations

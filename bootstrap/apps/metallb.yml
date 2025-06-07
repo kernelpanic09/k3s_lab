@@ -4,6 +4,9 @@ metadata:
   name: metallb
   namespace: argocd
 spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: metallb-system
   project: default
   source:
     repoURL: https://github.com/kernelpanic09/k3s_lab.git
@@ -11,10 +14,7 @@ spec:
     path: bootstrap/platform/metallb
     directory:
       recurse: true
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: argocd  
   syncPolicy:
     automated:
-      prune: true
       selfHeal: true
+      prune: true
