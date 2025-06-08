@@ -1,0 +1,18 @@
+replicaCount: 1
+
+image:
+  repository: demoapp  # will be overwritten by CI to ECR URI
+  pullPolicy: IfNotPresent
+  tag: "test"          # will be replaced in CI pipeline
+
+service:
+  type: ClusterIP
+  port: 5000
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
