@@ -1,33 +1,33 @@
-# resource "aws_iam_openid_connect_provider" "github" {
-#   url = "https://token.actions.githubusercontent.com"
+resource "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
 
-#   client_id_list = [
-#     "sts.amazonaws.com"
-#   ]
+  client_id_list = [
+    "sts.amazonaws.com"
+  ]
 
-#   thumbprint_list = [
-#     "6938fd4d98bab03faadb97b34396831e3780aea1" # GitHub's trusted root CA
-#   ]
-# }
+  thumbprint_list = [
+    "6938fd4d98bab03faadb97b34396831e3780aea1" # GitHub's trusted root CA
+  ]
+}
 
-# data "aws_iam_policy_document" "github_oidc_assume_role" {
-#   statement {
-#     effect = "Allow"
+data "aws_iam_policy_document" "github_oidc_assume_role" {
+  statement {
+    effect = "Allow"
 
-#     principals {
-#       type        = "Federated"
-#       identifiers = [aws_iam_openid_connect_provider.github.arn]
-#     }
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.github.arn]
+    }
 
-#     actions = ["sts:AssumeRoleWithWebIdentity"]
+    actions = ["sts:AssumeRoleWithWebIdentity"]
 
-#     condition {
-#       test     = "StringLike"
-#       variable = "token.actions.githubusercontent.com:sub"
-#       values   = ["repo:<your-github-username>/<your-repo-name>:ref:refs/heads/main"]
-#     }
-#   }
-# }
+    condition {
+      test     = "StringLike"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = ["repo:<your-github-username>/<your-repo-name>:ref:refs/heads/main"]
+    }
+  }
+}
 
 resource "aws_iam_role" "github_actions_k3s_lab" {
   name = "github-actions-ecr-role"
