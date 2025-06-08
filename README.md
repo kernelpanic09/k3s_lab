@@ -47,8 +47,8 @@ This repository documents the deployment, management, and automation of a produc
 - **Container Runtime**: containerd
 - **Network Plugin**: flannel (vxlan)
 - **Ingress**: NGINX + MetalLB + cert-manager
-- **Storage**: NFS (manual PVC + test pod), longhorn planned
-- **Secrets**: Native K8s Secrets + Sealed Secrets (in progress)
+- **Storage**: NFS (manual PVC + test pod)
+- **Secrets**: Native K8s Secrets
 
 ---
 
