@@ -1,17 +1,11 @@
-replicaCount: 1
-
 image:
   repository: 478047323853.dkr.ecr.us-east-1.amazonaws.com/demoapp
   tag: e4856518e03f4f4b9f24a84f6bdb192032c6e334
+  pullPolicy: IfNotPresent
 
-service:
-  type: ClusterIP
-  port: 5000
+serviceAccount:
+  create: true
+  name: ""  # or "demoapp-sa"
 
-resources: {}
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
+imagePullSecrets:
+  - name: ecr-creds
