@@ -8,9 +8,18 @@ on:
     branches:
       - main
 
+  pull_request:
+    paths:
+      - "apps/demoapp/**"
+      - ".github/workflows/ci-ecr-deploy.yml"
+    branches:
+      - main
+
+
 env:
-  AWS_REGION: us-east-1
-  ECR_REPO_NAME: demoapp
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME }}
+  ROLE_TO_ASSUME: ${{ secrets.ROLE_TO_ASSUME }}
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
@@ -39,7 +48,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
-          role-to-assume: arn:aws:iam::YOUR_ACCOUNT_ID:role/github-actions-ecr
+          role-to-assume: ${{ env.ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR

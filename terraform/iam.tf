@@ -24,7 +24,7 @@ data "aws_iam_policy_document" "github_oidc_assume_role" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:<your-github-username>/<your-repo-name>:ref:refs/heads/main"]
+      values   = ["repo:kernelpanic09/k3s_lab:ref:refs/heads/main"]
     }
   }
 }
