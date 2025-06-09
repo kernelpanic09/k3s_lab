@@ -1,0 +1,19 @@
+# bootstrap/apps/github-runner.yml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: github-runner
+  namespace: argocd
+spec:
+  destination:
+    namespace: github-runner
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    repoURL: https://github.com/kernelpanic09/k3s_lab.git
+    targetRevision: HEAD
+    path: apps/github-runner
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
