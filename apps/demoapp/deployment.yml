@@ -17,6 +17,6 @@ spec:
         - name: ecr-creds
       containers:
         - name: demoapp
-          image: 478047323853.dkr.ecr.us-east-1.amazonaws.com/demoapp:e4856518e03f4f4b9f24a84f6bdb192032c6e334
+image: 478047323853.dkr.ecr.us-east-1.amazonaws.com/demoapp:d5edff9562daaabcebb96bc0fdc5205c89841ae7
           ports:
             - containerPort: 5000
