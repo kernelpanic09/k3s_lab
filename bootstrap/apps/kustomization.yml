@@ -9,8 +9,8 @@ resources:
   - cert-issuer-staging.yml
   - demoapp.yml
   - ingress-nginx.yml
-  - metalb.yml
-  - metalb-crds.yml
+  - metallb.yml
+  - metallb-crds.yml
   - metallb-ns.yml
   - monitoring.yml
   - nginx-demo.yml
