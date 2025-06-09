@@ -8,8 +8,12 @@
 </head>
 <body>
   <div class="toggle">
-    <button onclick="document.body.classList.toggle('light-mode')">🌗 Toggle Dark Mode</button>
+    <label class="switch">
+      <input type="checkbox" onchange="document.body.classList.toggle('light-mode')">
+      <span class="slider round"></span>
+    </label>
   </div>
+
 
   <header>
     <h1>🚀 DevOps CI/CD Dashboard</h1>
