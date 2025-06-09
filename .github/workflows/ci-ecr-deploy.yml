@@ -1,5 +1,10 @@
 name: CI/CD for Python App to AWS ECR
 
+permissions:
+  id-token: write
+  contents: read
+
+
 on:
   push:
     paths:
