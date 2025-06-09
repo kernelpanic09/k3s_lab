@@ -1,9 +1,8 @@
 replicaCount: 1
 
 image:
-  repository: demoapp  # will be overwritten by CI to ECR URI
-  pullPolicy: IfNotPresent
-  tag: "test"          # will be replaced in CI pipeline
+  repository: 478047323853.dkr.ecr.us-east-1.amazonaws.com/demoapp
+  tag: e4856518e03f4f4b9f24a84f6bdb192032c6e334
 
 service:
   type: ClusterIP

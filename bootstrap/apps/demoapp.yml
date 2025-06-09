@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: demoapp
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/kernelpanic09/k3s_lab.git
+    targetRevision: main
+    path: apps/demoapp/helm-chart
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: demoapp
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
