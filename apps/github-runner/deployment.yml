@@ -13,6 +13,8 @@ spec:
       labels:
         app: github-runner
     spec:
+      imagePullSecrets:
+        - name: ecr-creds
       containers:
         - name: runner
           image: 478047323853.dkr.ecr.us-east-1.amazonaws.com/github-runner-buildx:latest
