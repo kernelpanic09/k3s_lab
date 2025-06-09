@@ -73,10 +73,16 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git checkout main
+
+          # Always configure Git to use the PAT
           git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
 
-          sed -i "s|^\s*image:.*|image: $ECR_REGISTRY/${{ env.ECR_REPO_NAME }}:${{ env.IMAGE_TAG }}|" apps/demoapp/deployment.yml
+          # Force update the image tag line
+          sed -i "s|^\\s*image:.*|image: $ECR_REGISTRY/${{ env.ECR_REPO_NAME }}:${{ env.IMAGE_TAG }}|" apps/demoapp/deployment.yml
           git add apps/demoapp/deployment.yml
 
+          # Always try to commit; if nothing changed, it's fine
           git commit -m "Force update demoapp image to ${{ env.IMAGE_TAG }}" || echo "No changes to commit"
+
+          # Always push (if commit existed, it will push)
           git push origin main || echo "Nothing to push"
