@@ -1,6 +1,5 @@
 # bootstrap/apps/kustomization.yaml
 resources:
-  - argocd.yml
   - argocd-ingress.yml
   - assemblyline.yml
   - assemblyline-ns.yml
