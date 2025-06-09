@@ -1,0 +1,3 @@
+resources:
+  - argocd.yml
+  - argocd-ingress.yml
