@@ -8,11 +8,11 @@ spec:
   source:
     repoURL: https://github.com/kernelpanic09/k3s_lab.git
     targetRevision: main
-    path: apps/demoapp/helm-chart
+    path: apps/demoapp
   destination:
     server: https://kubernetes.default.svc
     namespace: demoapp
   syncPolicy:
     automated:
-      prune: true
       selfHeal: true
+      prune: true
