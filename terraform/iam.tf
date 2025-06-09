@@ -59,3 +59,29 @@ resource "aws_iam_role_policy" "github_actions_ecr_policy" {
   role   = aws_iam_role.github_actions_k3s_lab.id
   policy = data.aws_iam_policy_document.ecr_push_policy.json
 }
+
+
+resource "aws_iam_user" "k3s_ecr_pull" {
+  name = "k3s-ecr-pull"
+}
+
+resource "aws_iam_user_policy" "ecr_pull" {
+  name = "ecr-pull-policy"
+  user = aws_iam_user.k3s_ecr_pull.name
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
