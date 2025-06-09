@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevOps CI/CD Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="toggle">
+    <button onclick="document.body.classList.toggle('light-mode')">🌗 Toggle Dark Mode</button>
+  </div>
+
+  <header>
+    <h1>🚀 DevOps CI/CD Dashboard</h1>
+    <p><strong>Environment:</strong> {{ env }}</p>
+    <p><strong>Deployed At:</strong> {{ timestamp }}</p>
+  </header>
+
+  <section class="info">
+    <p><strong>Git SHA:</strong> {{ git_sha }}</p>
+    <p><strong>Language:</strong> Python {{ python_version }}</p>
+    <p><strong>Framework:</strong> {{ framework }}</p>
+    <p><strong>OS:</strong> {{ os_name }}</p>
+    <p><strong>Container:</strong> {{ container_os }}</p>
+  </section>
+
+  <section class="diagram">
+    <div class="pipeline">
+      <div class="step">GitHub</div>
+      <div class="arrow">➡</div>
+      <div class="step">GitHub Actions</div>
+      <div class="arrow">➡</div>
+      <div class="step">ECR</div>
+      <div class="arrow">➡</div>
+      <div class="step">ArgoCD</div>
+      <div class="arrow">➡</div>
+      <div class="step">K3s</div>
+    </div>
+  </section>
+</body>
+</html>
