@@ -72,7 +72,6 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git checkout main
-          sed -i "s|image: .*|image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_NAME }}:${{ env.IMAGE_TAG }}|" bootstrap/apps/nginx-demo.yml
+          sed -i "s|^\s*image:.*|image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_NAME }}:${{ env.IMAGE_TAG }}|" bootstrap/apps/nginx-demo.yml || true
           git add bootstrap/apps/nginx-demo.yml
-          git commit -m "Update image to ${{ env.IMAGE_TAG }}"
-          git push
+          git diff --cached --quiet || (git commit -m "Update image to ${{ env.IMAGE_TAG }}" && git push)
