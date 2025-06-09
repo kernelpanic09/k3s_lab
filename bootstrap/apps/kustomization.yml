@@ -1,3 +1,18 @@
+# bootstrap/apps/kustomization.yaml
 resources:
   - argocd.yml
   - argocd-ingress.yml
+  - assemblyline.yml
+  - assemblyline-ns.yml
+  - cert-manager.yml
+  - cert-issuer-prod.yml
+  - cert-issuer-staging.yml
+  - demoapp.yml
+  - ingress-nginx.yml
+  - metalb.yml
+  - metalb-crds.yml
+  - metallb-ns.yml
+  - monitoring.yml
+  - nginx-demo.yml
+  - nfs-test-pod.yml
+  - nfs-test-pvc.yml
