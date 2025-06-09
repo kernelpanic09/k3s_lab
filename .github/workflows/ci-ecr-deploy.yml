@@ -73,10 +73,12 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git checkout main
+
+          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
+
           sed -i "s|^\s*image:.*|image: $ECR_REGISTRY/${{ env.ECR_REPO_NAME }}:${{ env.IMAGE_TAG }}|" apps/demoapp/deployment.yml
           git add apps/demoapp/deployment.yml
-          git diff --cached --quiet || (
-            git commit -m "Update demoapp image to ${{ env.IMAGE_TAG }}"
-            git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
-            git push origin main
-          )
+
+          git diff --cached --quiet || git commit -m "Update demoapp image to ${{ env.IMAGE_TAG }}"
+          git diff --cached --quiet || git push origin main
+
