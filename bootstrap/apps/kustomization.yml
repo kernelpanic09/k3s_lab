@@ -15,3 +15,4 @@ resources:
   - nginx-demo.yml
   - nfs-test-pod.yml
   - nfs-test-pvc.yml
+  - github-runner.yml
