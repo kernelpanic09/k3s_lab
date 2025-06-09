@@ -1,0 +1,67 @@
+name: PR Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches: [main]
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: demoapp
+  ECR_REGISTRY: 478047323853.dkr.ecr.us-east-1.amazonaws.com
+  PR_NUMBER: ${{ github.event.pull_request.number }}
+  IMAGE_TAG: pr-${{ github.sha }}
+  APP_NAME: demoapp-pr${{ github.event.pull_request.number }}
+  PR_DOMAIN: pr${{ github.event.pull_request.number }}.codepretzels.com
+  NAMESPACE: demoapp-pr${{ github.event.pull_request.number }}
+
+jobs:
+  preview:
+    if: github.event.action != 'closed'
+    runs-on: [self-hosted, linux]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        run: |
+          aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Replace patch values
+        run: |
+          sed -i "s|REPLACE_IMAGE_TAG|$IMAGE_TAG|g" apps/demoapp/overlays/preview/deployment-patch.yaml
+          sed -i "s|REPLACE_PR_DOMAIN|$PR_DOMAIN|g" apps/demoapp/overlays/preview/ingress-patch.yaml
+          sed -i "s|REPLACE_PR_NUMBER|$PR_NUMBER|g" apps/demoapp/overlays/preview/namespace.yaml
+
+      - name: Deploy Preview App with ArgoCD
+        run: |
+          argocd app create $APP_NAME \
+            --repo https://github.com/<your-org>/<your-repo>.git \
+            --path apps/demoapp/overlays/preview \
+            --dest-server https://kubernetes.default.svc \
+            --dest-namespace $NAMESPACE \
+            --upsert
+
+          argocd app sync $APP_NAME
+
+  cleanup:
+    if: github.event.action == 'closed'
+    runs-on: [self-hosted, linux]
+
+    steps:
+      - name: Delete ArgoCD App and Namespace
+        run: |
+          argocd app delete demoapp-pr${{ github.event.pull_request.number }} --yes || true
+          kubectl delete namespace demoapp-pr${{ github.event.pull_request.number }} || true

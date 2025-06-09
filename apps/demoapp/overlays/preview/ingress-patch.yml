@@ -1,0 +1,7 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: demoapp
+spec:
+  rules:
+    - host: REPLACE_PR_DOMAIN
