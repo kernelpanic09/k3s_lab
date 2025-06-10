@@ -59,6 +59,15 @@ jobs:
           sed -i "s|REPLACE_PR_DOMAIN|${PR_DOMAIN}|g" apps/demoapp/overlays/preview/ingress-patch.yml
           sed -i "s|REPLACE_PR_NUMBER|${PR_NUMBER}|g" apps/demoapp/overlays/preview/namespace.yml
 
+      - name: Login to ArgoCD
+        run: |
+          argocd login argo.codepretzels.com \
+            --username admin \
+            --password ${{ secrets.ARGOCD_PASSWORD }} \
+            --insecure
+
+
+
       - name: Deploy Preview App with ArgoCD
         run: |
           argocd app create ${APP_NAME} \
