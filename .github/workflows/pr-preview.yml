@@ -57,7 +57,16 @@ jobs:
         run: |
           sed -i "s|REPLACE_IMAGE_TAG|${IMAGE_TAG}|g" apps/demoapp/overlays/preview/deployment-patch.yml
           sed -i "s|REPLACE_PR_DOMAIN|${PR_DOMAIN}|g" apps/demoapp/overlays/preview/ingress-patch.yml
-          sed -i "s|REPLACE_PR_NAMESPACE|${NAMESPACE}|g" apps/demoapp/overlays/preview/namespace.yml
+
+      - name: Generate namespace manifest dynamically
+        run: |
+          echo "apiVersion: v1" > apps/demoapp/overlays/preview/namespace.yml
+          echo "kind: Namespace" >> apps/demoapp/overlays/preview/namespace.yml
+          echo "metadata:" >> apps/demoapp/overlays/preview/namespace.yml
+          echo "  name: ${NAMESPACE}" >> apps/demoapp/overlays/preview/namespace.yml
+
+      - name: Debug namespace.yml
+        run: cat apps/demoapp/overlays/preview/namespace.yml
 
 
       - name: Login to ArgoCD
@@ -66,6 +75,7 @@ jobs:
             --username admin \
             --password ${{ secrets.ARGOCD_PASSWORD }} \
             --insecure
+
 
 
 
