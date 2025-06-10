@@ -70,13 +70,16 @@ jobs:
       - name: Debug namespace.yml
         run: cat apps/demoapp/overlays/preview/namespace.yml
 
-      - name: Commit namespace.yml to PR branch
+      - name: Commit PR-specific patch changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add -f apps/demoapp/overlays/preview/namespace.yml
-          git commit -m "Add namespace manifest for PR #${PR_NUMBER}" || echo "Nothing to commit"
+          git add -f apps/demoapp/overlays/preview/deployment-patch.yml
+          git add -f apps/demoapp/overlays/preview/ingress-patch.yml
+          git commit -m "Update PR #${PR_NUMBER} namespace and ArgoCD patches" || echo "No changes"
           git push origin HEAD:${{ github.head_ref }}
+
 
       - name: Login to ArgoCD
         run: |
