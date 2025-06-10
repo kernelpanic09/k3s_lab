@@ -5,15 +5,15 @@ namespace: REPLACE_PR_NAMESPACE
 
 resources:
   - ../../base
-  - namespace.yaml
+  - namespace.yml
 
 patches:
   - target:
       kind: Deployment
       name: demoapp
-    path: deployment-patch.yaml
+    path: deployment-patch.yml
 
   - target:
       kind: Ingress
       name: demoapp
-    path: ingress-patch.yaml
+    path: ingress-patch.yml
