@@ -107,10 +107,3 @@ This repo documents a full-stack, production-style k3s homelab built for real-wo
 
 ---
 
-## ➕ Add New Worker Nodes
-
-```bash
-curl -sfL https://get.k3s.io | \
-  K3S_URL=https://<control-plane-ip>:6443 \
-  K3S_TOKEN=<node-token> \
-  sh -
