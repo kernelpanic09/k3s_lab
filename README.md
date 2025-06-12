@@ -1,133 +1,116 @@
-# 🧪 Kubernetes Homelab (k3s_lab)
+# 🧪 k3s Homelab – Real-World Kubernetes for DevOps Practice
 
-This repository documents the deployment, management, and automation of a production-style Kubernetes (k3s) homelab environment. It's built for learning, showcasing DevOps practices, and running real workloads using tools like ArgoCD, GitHub Actions, Helm, and ECR.
-
----
-
-## 📚 Table of Contents
-
-- [Cluster Overview](#cluster-overview)
-- [Host Infrastructure](#host-infrastructure)
-- [System Details](#system-details)
-- [GitOps Deployment](#gitops-deployment)
-- [CI/CD Pipeline](#cicd-pipeline)
-- [Provisioning & Automation](#provisioning--automation)
-- [Apps Deployed](#apps-deployed)
-- [Monitoring & Observability](#monitoring--observability)
-- [Documentation](#documentation)
-- [Joining New Nodes](#joining-new-nodes)
+This repo documents a full-stack, production-style k3s homelab built for real-world learning, DevOps workflows, and infrastructure experimentation. It showcases GitOps with ArgoCD, CI/CD with GitHub Actions, Helm-based app deployment, and infrastructure automation using Ansible and Terraform.
 
 ---
 
-## 🏗 Cluster Overview
+## 📋 Overview
 
-| Component      | Hostname       | Role           | Kubernetes Version    |
-|----------------|----------------|----------------|------------------------|
-| Control Plane  | control-plane  | control-plane  | v1.32.5+k3s1           |
-| Worker Node 1  | worker-1       | worker         | v1.32.5+k3s1           |
-| Worker Node 2  | worker-2       | worker         | v1.32.5+k3s1           |
-
----
-
-## 🖥 Host Infrastructure
-
-| Detail         | Description                            |
-|----------------|----------------------------------------|
-| Hypervisor     | Proxmox VE 8.4.1                       |
-| VM OS          | Debian GNU/Linux 12 (bookworm)         |
-| Kernel         | 6.1.0-10-amd64 SMP PREEMPT_DYNAMIC     |
-| Networking     | Proxmox virtual bridges (vxlan/flannel)|
-| Storage        | Local/shared Proxmox storage           |
+| Node Role     | Hostname       | K8s Version         |
+|---------------|----------------|---------------------|
+| Control Plane | control-plane  | v1.32.5+k3s1        |
+| Worker 1      | worker-1       | v1.32.5+k3s1        |
+| Worker 2      | worker-2       | v1.32.5+k3s1        |
 
 ---
 
-## ⚙ System Details
+## 🏠 Host Environment
 
-- **Install**: via official [k3s install script](https://rancher.com/docs/k3s/latest/en/installation/)
-- **Container Runtime**: containerd
-- **Network Plugin**: flannel (vxlan)
-- **Ingress**: NGINX + MetalLB + cert-manager
-- **Storage**: NFS (manual PVC + test pod)
+- **Hypervisor**: Proxmox VE 8.4.1
+- **OS**: Debian 12 (Bookworm)
+- **Kernel**: 6.1.0-10-amd64
+- **Networking**: Proxmox virtual bridges + Flannel (VXLAN)
+- **Storage**: NFS-backed PVCs for Kubernetes, plus local disk
+
+---
+
+## 🔧 Platform Stack
+
+- **Install Method**: Official k3s script
+- **Runtime**: containerd
+- **Ingress**: NGINX, MetalLB, cert-manager
 - **Secrets**: Native K8s Secrets
+- **CI/CD**: GitHub Actions + ArgoCD
+- **Monitoring**: Prometheus, Grafana
+- **Automation**: Ansible & Terraform
 
 ---
 
-## 🚀 GitOps Deployment
+## 🚀 GitOps Deployment with ArgoCD
 
-- **ArgoCD** is used for GitOps-style continuous delivery
-- ArgoCD is deployed via Helm and configured using `bootstrap/root-app.yml`
-- All apps and platform components are defined under `bootstrap/apps/`
-- Sync policies are set to `automated` with `prune` and `selfHeal`
-
----
-
-## ⚙️ CI/CD Pipeline
-
-- **CI**: GitHub Actions (`.github/workflows/ci-ecr-deploy.yml`)
-  - Builds app Docker images
-  - Scans with Trivy (optional)
-  - Pushes to ECR
-  - Patches Helm `values.yaml` with image tag
-  - Commits back to Git for ArgoCD to detect
-
-- **CD**: ArgoCD
-  - Watches `apps/*/helm-chart`
-  - Pulls latest image from ECR using patched Helm values
-  - Deploys into k3s via sync
-
-### Demo App Pipeline:
-- App: `apps/demoapp`
-- Helm chart: `apps/demoapp/helm-chart`
-- ECR repo: `demoapp`
-- Deployment triggered by GitHub push
+- ArgoCD bootstrapped via `bootstrap/root-app.yml`
+- App definitions live in `bootstrap/apps/`
+- Sync is **automated** with `prune` and `selfHeal` enabled
+- Ingress and external exposure defined in `ingress/`
 
 ---
 
-## 🛠 Provisioning & Automation
+## 🔄 CI/CD Workflows
 
-- **Ansible**: All k3s nodes are bootstrapped using `ansible/playbooks/`
-  - Install tools, patch OS, setup MOTD
-  - Install Helm and prepare environment
-- **Terraform**: Reserved for cloud provisioning, under `terraform/`
-- **Makefiles (planned)**: Wrapper scripts for bootstrap and testing flows
+**GitHub Actions** handles CI:
+- Builds Docker images
+- Runs Trivy scans (optional)
+- Pushes to AWS ECR
+- Updates Helm values with new image tags
+- Commits updated manifests to Git
 
----
-
-## 🧩 Apps Deployed
-
-| App            | Source                                | Notes                              |
-|----------------|----------------------------------------|------------------------------------|
-| demoapp        | `apps/demoapp/`                        | Flask test app with CI/CD pipeline |
-| nginx-demo     | `apps/nginx-demo/`                     | Simple static NGINX test app       |
-| assemblyline   | `apps/assemblyline/`                   | Complex security data platform     |
+**ArgoCD** handles CD:
+- Watches Helm charts under `apps/*`
+- Pulls latest image from ECR
+- Syncs changes automatically into the k3s cluster
 
 ---
 
-## 📈 Monitoring & Observability
+## 🧪 Applications
 
-- [Prometheus & Grafana](docs/monitoring.md) deployed via Helm
-- ArgoCD UI exposed via [Ingress](ingress/argocd-ingress.yaml)
-- Future integrations: alerting to Slack/webhook
+| App           | Location                   | Notes                              |
+|---------------|----------------------------|------------------------------------|
+| `demoapp`     | `apps/demoapp/`            | Flask app with Helm + GitOps flow  |
+| `nginx-demo`  | `apps/nginx-demo/`         | Static NGINX app for testing       |
+| `assemblyline`| `apps/assemblyline/`       | Full-scale security data platform  |
 
 ---
 
-## 📖 Documentation
+## 🔐 Security & Secrets
+
+- Native K8s secrets used for minimal PoC
+- Plans to test Vault/SealedSecrets later
+- Ingress secured with cert-manager (Let’s Encrypt staging + prod)
+
+---
+
+## ⚙️ Automation
+
+- **Ansible**: Used to bootstrap OS, install Helm, patch systems
+  - All playbooks live in `ansible/playbooks/`
+- **Terraform**: Cloud infrastructure as code
+  - Configs in `terraform/` (modular layout in progress)
+
+---
+
+## 📈 Monitoring
+
+- Prometheus + Grafana deployed via Helm
+- ArgoCD dashboard exposed via NGINX ingress
+- Metrics and logs stored locally (for now)
+
+---
+
+## 📝 Docs
 
 - [ArgoCD Setup](docs/argocd.md)
 - [Monitoring Stack](docs/monitoring.md)
-- [MetalLB Configuration](docs/metallb.md)
-- [Static IP Setup](docs/static-ip-setup.md)
-- [Upgrade Notes](docs/upgrade.md)
+- [MetalLB Setup](docs/metallb.md)
+- [Static IP Config](docs/static-ip-setup.md)
 - [Troubleshooting](docs/troubleshooting.md)
+- [Upgrades](docs/upgrade.md)
 
 ---
 
-## ➕ Joining New Nodes
-
-To join a new worker node to the cluster:
+## ➕ Add New Worker Nodes
 
 ```bash
 curl -sfL https://get.k3s.io | \
   K3S_URL=https://<control-plane-ip>:6443 \
-  K3S_TOKEN=<join-token> \
+  K3S_TOKEN=<node-token> \
   sh -
