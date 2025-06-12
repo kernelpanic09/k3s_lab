@@ -103,7 +103,7 @@ This repo documents a full-stack, production-style k3s homelab built for real-wo
 - [MetalLB Setup](docs/metallb.md)
 - [Static IP Config](docs/static-ip-setup.md)
 - [Troubleshooting](docs/troubleshooting.md)
-- [Upgrades](docs/upgrade.md)
+- [Updates](docs/updates.md)
 
 ---
 
