@@ -1,6 +1,6 @@
 - op: replace
   path: /spec/template/spec/containers/0/image
-  value: 478047323853.dkr.ecr.us-east-1.amazonaws.com/demoapp:REPLACE_IMAGE_TAG
+  value: 478047323853.dkr.ecr.us-east-1.amazonaws.com/demoapp:pr-f25d1008d24867d693bed4da18de3728d0c3dbd7
 
 - op: add
   path: /spec/template/spec/imagePullSecrets
