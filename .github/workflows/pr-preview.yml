@@ -55,6 +55,26 @@ jobs:
           tags: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
           platforms: linux/amd64
 
+      - name: Generate imagePullSecret manifest
+        run: |
+          DOCKER_SERVER="${ECR_REGISTRY}"
+          DOCKER_USER="AWS"
+          DOCKER_PASSWORD=$(aws ecr get-login-password --region $AWS_REGION)
+          DOCKER_AUTH=$(echo -n "${DOCKER_USER}:${DOCKER_PASSWORD}" | base64)
+
+          cat <<EOF > apps/demoapp/overlays/preview/image-pull-secret.yml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: regcred
+  namespace: ${NAMESPACE}
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: $(echo -n "{\"auths\":{\"${DOCKER_SERVER}\":{\"username\":\"${DOCKER_USER}\",\"password\":\"${DOCKER_PASSWORD}\",\"auth\":\"${DOCKER_AUTH}\"}}}" | base64 -w 0)
+EOF
+
+
+
       - name: Replace patch values
         run: |
           sed -i "s|REPLACE_IMAGE_TAG|${IMAGE_TAG}|g" apps/demoapp/overlays/preview/deployment-patch.yml
@@ -77,8 +97,10 @@ jobs:
           git add -f apps/demoapp/overlays/preview/namespace.yml
           git add -f apps/demoapp/overlays/preview/deployment-patch.yml
           git add -f apps/demoapp/overlays/preview/ingress-patch.yml
+          git add -f apps/demoapp/overlays/preview/image-pull-secret.yml  # ✅ ADD THIS LINE
           git commit -m "Update PR #${PR_NUMBER} namespace and ArgoCD patches" || echo "No changes"
           git push origin HEAD:${{ github.head_ref }}
+
 
 
       - name: Login to ArgoCD

@@ -1,3 +1,8 @@
 - op: replace
   path: /spec/template/spec/containers/0/image
   value: 478047323853.dkr.ecr.us-east-1.amazonaws.com/demoapp:REPLACE_IMAGE_TAG
+
+- op: add
+  path: /spec/template/spec/imagePullSecrets
+  value:
+    - name: regcred

@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - ../../base
   - namespace.yml
+  - image-pull-secret.yml
 
 patches:
   - target:
