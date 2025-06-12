@@ -98,7 +98,7 @@ jobs:
             --path apps/demoapp/overlays/preview \
             --revision ${{ github.head_ref }} \
             --dest-server https://kubernetes.default.svc \
-            --dest-namespace default \
+            --dest-namespace ${NAMESPACE} \
             --upsert
 
           argocd app sync ${APP_NAME}
