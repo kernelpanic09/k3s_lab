@@ -80,7 +80,7 @@ jobs:
           git add -f apps/demoapp/overlays/preview/namespace.yml
           git add -f apps/demoapp/overlays/preview/deployment-patch.yml
           git add -f apps/demoapp/overlays/preview/ingress-patch.yml
-          git add -f apps/demoapp/overlays/preview/image-pull-secret.yml  # ✅ ADD THIS LINE
+          git add -f apps/demoapp/overlays/preview/image-pull-secret.yml
           git commit -m "Update PR #${PR_NUMBER} namespace and ArgoCD patches" || echo "No changes"
           git push origin HEAD:${{ github.head_ref }}
 
