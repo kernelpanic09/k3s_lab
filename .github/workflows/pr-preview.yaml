@@ -58,86 +58,86 @@ jobs:
           platforms: linux/amd64
 
       - name: Generate imagePullSecret manifest
-        run: bash scripts/gen-image-pull-secret.sh ${NAMESPACE} apps/demoapp/overlays/preview/image-pull-secret.yml
+        run: bash scripts/gen-image-pull-secret.sh ${NAMESPACE} apps/demoapp/overlays/preview/image-pull-secret.yaml
 
       - name: Replace patch values
         run: |
-          sed -i "s|REPLACE_IMAGE_TAG|${IMAGE_TAG}|g" apps/demoapp/overlays/preview/deployment-patch.yml
-          sed -i "s|REPLACE_PR_DOMAIN|${PR_DOMAIN}|g" apps/demoapp/overlays/preview/ingress-patch.yml
+          sed -i "s|REPLACE_IMAGE_TAG|${IMAGE_TAG}|g" apps/demoapp/overlays/preview/deployment-patch.yaml
+          sed -i "s|REPLACE_PR_DOMAIN|${PR_DOMAIN}|g" apps/demoapp/overlays/preview/ingress-patch.yaml
 
 
       - name: Generate ECR secret job manifest with echo
         run: |
-          echo "apiVersion: batch/v1" > apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "kind: Job" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "metadata:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "  name: create-ecr-secret-${NAMESPACE}" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "  namespace: argocd-secrets" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "spec:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "  template:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "    spec:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "      serviceAccountName: default" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "      restartPolicy: OnFailure" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "      containers:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "        - name: aws-cli" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "          image: amazon/aws-cli" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "          command: [\"/bin/sh\", \"-c\"]" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "          args:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "            - |" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "              echo \"Creating ECR imagePullSecret for ${NAMESPACE}...\"" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "              aws ecr get-login-password --region ${AWS_REGION} | \\" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "              kubectl create secret docker-registry regcred \\" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "                --docker-server=${ECR_REGISTRY} \\" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "                --docker-username=AWS \\" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "                --docker-password-stdin \\" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "                --namespace=${NAMESPACE}" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "          env:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "            - name: AWS_ACCESS_KEY_ID" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "              valueFrom:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "                secretKeyRef:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "                  name: argo-aws-creds" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "                  key: aws_access_key_id" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "            - name: AWS_SECRET_ACCESS_KEY" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "              valueFrom:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "                secretKeyRef:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "                  name: argo-aws-creds" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
-          echo "                  key: aws_secret_access_key" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yml
+          echo "apiVersion: batch/v1" > apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "kind: Job" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "metadata:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "  name: create-ecr-secret-${NAMESPACE}" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "  namespace: argocd-secrets" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "spec:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "  template:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "    spec:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "      serviceAccountName: default" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "      restartPolicy: OnFailure" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "      containers:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "        - name: aws-cli" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "          image: amazon/aws-cli" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "          command: [\"/bin/sh\", \"-c\"]" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "          args:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "            - |" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "              echo \"Creating ECR imagePullSecret for ${NAMESPACE}...\"" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "              aws ecr get-login-password --region ${AWS_REGION} | \\" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "              kubectl create secret docker-registry regcred \\" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "                --docker-server=${ECR_REGISTRY} \\" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "                --docker-username=AWS \\" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "                --docker-password-stdin \\" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "                --namespace=${NAMESPACE}" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "          env:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "            - name: AWS_ACCESS_KEY_ID" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "              valueFrom:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "                secretKeyRef:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "                  name: argo-aws-creds" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "                  key: aws_access_key_id" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "            - name: AWS_SECRET_ACCESS_KEY" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "              valueFrom:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "                secretKeyRef:" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "                  name: argo-aws-creds" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
+          echo "                  key: aws_secret_access_key" >> apps/demoapp/overlays/preview/create-ecr-secret-job.yaml
 
 
 
       - name: Generate RBAC manifest dynamically
         run: |
-          echo "apiVersion: rbac.authorization.k8s.io/v1" > apps/demoapp/overlays/preview/secret-rbac.yml
-          echo "kind: Role" >> apps/demoapp/overlays/preview/secret-rbac.yml
-          echo "metadata:" >> apps/demoapp/overlays/preview/secret-rbac.yml
-          echo "  name: allow-secret-create" >> apps/demoapp/overlays/preview/secret-rbac.yml
-          echo "  namespace: ${NAMESPACE}" >> apps/demoapp/overlays/preview/secret-rbac.yml
-          echo "rules:" >> apps/demoapp/overlays/preview/secret-rbac.yml
-          echo "- apiGroups: [\"\"]" >> apps/demoapp/overlays/preview/secret-rbac.yml
-          echo "  resources: [\"secrets\"]" >> apps/demoapp/overlays/preview/secret-rbac.yml
-          echo "  verbs: [\"create\"]" >> apps/demoapp/overlays/preview/secret-rbac.yml
+          echo "apiVersion: rbac.authorization.k8s.io/v1" > apps/demoapp/overlays/preview/secret-rbac.yaml
+          echo "kind: Role" >> apps/demoapp/overlays/preview/secret-rbac.yaml
+          echo "metadata:" >> apps/demoapp/overlays/preview/secret-rbac.yaml
+          echo "  name: allow-secret-create" >> apps/demoapp/overlays/preview/secret-rbac.yaml
+          echo "  namespace: ${NAMESPACE}" >> apps/demoapp/overlays/preview/secret-rbac.yaml
+          echo "rules:" >> apps/demoapp/overlays/preview/secret-rbac.yaml
+          echo "- apiGroups: [\"\"]" >> apps/demoapp/overlays/preview/secret-rbac.yaml
+          echo "  resources: [\"secrets\"]" >> apps/demoapp/overlays/preview/secret-rbac.yaml
+          echo "  verbs: [\"create\"]" >> apps/demoapp/overlays/preview/secret-rbac.yaml
           # Add the RoleBinding below...
 
 
 
       - name: Generate namespace manifest dynamically
         run: |
-          echo "apiVersion: v1" > apps/demoapp/overlays/preview/namespace.yml
-          echo "kind: Namespace" >> apps/demoapp/overlays/preview/namespace.yml
-          echo "metadata:" >> apps/demoapp/overlays/preview/namespace.yml
-          echo "  name: ${NAMESPACE}" >> apps/demoapp/overlays/preview/namespace.yml
+          echo "apiVersion: v1" > apps/demoapp/overlays/preview/namespace.yaml
+          echo "kind: Namespace" >> apps/demoapp/overlays/preview/namespace.yaml
+          echo "metadata:" >> apps/demoapp/overlays/preview/namespace.yaml
+          echo "  name: ${NAMESPACE}" >> apps/demoapp/overlays/preview/namespace.yaml
 
-      - name: Debug namespace.yml
-        run: cat apps/demoapp/overlays/preview/namespace.yml
+      - name: Debug namespace.yaml
+        run: cat apps/demoapp/overlays/preview/namespace.yaml
 
       - name: Commit PR-specific patch changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add -f apps/demoapp/overlays/preview/namespace.yml
-          git add -f apps/demoapp/overlays/preview/deployment-patch.yml
-          git add -f apps/demoapp/overlays/preview/ingress-patch.yml
-          git add -f apps/demoapp/overlays/preview/image-pull-secret.yml
+          git add -f apps/demoapp/overlays/preview/namespace.yaml
+          git add -f apps/demoapp/overlays/preview/deployment-patch.yaml
+          git add -f apps/demoapp/overlays/preview/ingress-patch.yaml
+          git add -f apps/demoapp/overlays/preview/image-pull-secret.yaml
           git commit -m "Update PR #${PR_NUMBER} namespace and ArgoCD patches" || echo "No changes"
           git push origin HEAD:${{ github.head_ref }}
 
