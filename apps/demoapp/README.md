@@ -1,5 +1,9 @@
 # 🚀 DemoApp: DevOps CI/CD Dashboard
 
+
+![alt text](image.png)
+
+
 A lightweight Flask application used for validating CI/CD pipelines, GitOps flows, and container orchestration in DevOps labs. This app is purpose-built for use with Kubernetes (K3s), ArgoCD, GitHub Actions, and AWS ECR.
 
 ## Purpose
