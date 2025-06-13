@@ -4,7 +4,7 @@ kind: Kustomization
 resources:
   - ../../base
   - namespace.yml
-  - image-pull-secret.yml
+  - create-ecr-secret-job.yml  
 
 patches:
   - target:
