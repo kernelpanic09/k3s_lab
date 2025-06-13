@@ -1,3 +1,12 @@
-- op: replace
-  path: /spec/template/spec/containers/0/image
-  value: 478047323853.dkr.ecr.us-east-1.amazonaws.com/demoapp:REPLACE_IMAGE_TAG
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demoapp-preview
+spec:
+  template:
+    spec:
+      containers:
+        - name: demoapp
+          env:
+            - name: PREVIEW_ENV
+              value: "true"

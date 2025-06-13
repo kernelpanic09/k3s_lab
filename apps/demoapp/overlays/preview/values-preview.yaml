@@ -1,0 +1,8 @@
+namespace: demoapp-pr123
+image:
+  tag: pr-abcdef123456
+ingress:
+  host: pr123.codepretzels.com
+env:
+  GIT_SHA: "abcdef123456"
+  DEPLOY_ENV: "preview"

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: demoapp
+description: A simple Flask-based app for DevOps previews
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

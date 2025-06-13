@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "demoapp.fullname" . }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "demoapp.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "demoapp.fullname" . }}
+    spec:
+      containers:
+        - name: demoapp
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 5000
+          env:
+            - name: GIT_SHA
+              value: "{{ .Values.env.GIT_SHA }}"
+            - name: DEPLOY_ENV
+              value: "{{ .Values.env.DEPLOY_ENV }}"

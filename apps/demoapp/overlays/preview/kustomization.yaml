@@ -1,18 +1,20 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+namespace: demoapp-pr123
+
 resources:
   - ../../base
-  - namespace.yml
-  - create-ecr-secret-job.yml  
+  - create-ecr-secret-job.yaml
+  - rbac.yaml
+
+helmCharts:
+  - name: demoapp
+    releaseName: demoapp-preview
+    version: 0.1.0
+    repo: file://../../base
+    valuesFile: values-preview.yaml
 
 patches:
-  - target:
-      kind: Deployment
-      name: demoapp
-    path: deployment-patch.yml
-
-  - target:
-      kind: Ingress
-      name: demoapp
-    path: ingress-patch.yml
+  - path: deployment-patch.yaml
+  - path: ingress-patch.yaml

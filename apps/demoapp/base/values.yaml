@@ -1,0 +1,25 @@
+nameOverride: ""
+fullnameOverride: ""
+
+namespace: demoapp
+replicaCount: 1
+image:
+  repository: 478047323853.dkr.ecr.us-east-1.amazonaws.com/demoapp
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 5000
+
+ingress:
+  enabled: true
+  host: demoapp.codepretzels.com
+  className: nginx
+  tls: false
+
+resources: {}
+
+env:
+  GIT_SHA: "dev"
+  DEPLOY_ENV: "dev"
