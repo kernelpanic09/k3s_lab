@@ -1,2 +1,2 @@
 resources:
-  - cluster-issuer-prod.yml
+  - cluster-issuer-prod.yaml

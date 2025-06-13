@@ -26,8 +26,8 @@ bootstrap/platform/cert-manager/
 ## ArgoCD Applications
 ```bash
 bootstrap/apps/
-├── cert-issuer-prod.yml
-├── cert-issuer-staging.yml
+├── cert-issuer-prod.yaml
+├── cert-issuer-staging.yaml
 ```
 ## ✅ Prerequisites
 

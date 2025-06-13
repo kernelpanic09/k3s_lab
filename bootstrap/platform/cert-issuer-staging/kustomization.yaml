@@ -1,2 +1,2 @@
 resources:
-  - cluster-issuer-staging.yml
+  - cluster-issuer-staging.yaml
