@@ -1,0 +1,17 @@
+name: PR Preview Cleanup
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  cleanup:
+    runs-on: [self-hosted, linux]
+
+    steps:
+      - name: Delete ArgoCD App and Namespace
+        run: |
+          PR_NUM=${{ github.event.pull_request.number }}
+          argocd app delete demoapp-pr${PR_NUM} --yes || true
+          kubectl delete namespace demoapp-pr${PR_NUM} || true

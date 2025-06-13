@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: demoapp-previews
+  namespace: argocd
+spec:
+  generators:
+    - pullRequest:
+        github:
+          owner: kernelpanic09
+          repo: k3s_lab
+          tokenRef:
+            secretName: github-token
+            key: token
+        requeueAfterSeconds: 60
+        filters:
+          - branchMatch: '^main$'
+  template:
+    metadata:
+      name: 'demoapp-pr{{number}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/kernelpanic09/k3s_lab.git
+        targetRevision: '{{head_sha}}'
+        path: apps/demoapp/overlays/preview
+        helm:
+          values: |
+            namespace: demoapp-pr{{number}}
+            image:
+              tag: pr-{{head_sha}}
+            ingress:
+              host: pr{{number}}.codepretzels.com
+            env:
+              GIT_SHA: "{{head_sha}}"
+              DEPLOY_ENV: preview
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: demoapp-pr{{number}}
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
