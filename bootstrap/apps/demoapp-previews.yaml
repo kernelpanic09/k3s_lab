@@ -25,8 +25,15 @@ spec:
         targetRevision: '{{head_sha}}'
         path: apps/demoapp/base
         helm:
-          valueFiles:
-            - ../../overlays/preview/values-preview.yaml
+          values: |
+            namespace: demoapp-pr{{number}}
+            image:
+              tag: pr-{{head_sha}}
+            ingress:
+              host: pr{{number}}.codepretzels.com
+            env:
+              GIT_SHA: "{{head_sha}}"
+              DEPLOY_ENV: preview
       destination:
         server: https://kubernetes.default.svc
         namespace: demoapp-pr{{number}}
