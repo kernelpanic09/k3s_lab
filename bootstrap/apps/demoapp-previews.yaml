@@ -17,13 +17,13 @@ spec:
           - branchMatch: '^main$'
   template:
     metadata:
-      name: 'demoapp-pr{{number}}'
+      name: demoapp-pr{{number}}
     spec:
       project: default
       source:
         repoURL: https://github.com/kernelpanic09/k3s_lab.git
         targetRevision: '{{head_sha}}'
-        path: apps/demoapp/overlays/preview
+        path: apps/demoapp/base
         helm:
           values: |
             namespace: demoapp-pr{{number}}
