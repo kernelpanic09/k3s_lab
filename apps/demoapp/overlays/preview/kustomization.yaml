@@ -8,13 +8,14 @@ resources:
   - create-ecr-secret-job.yaml
   - rbac.yaml
 
-helmCharts:
-  - name: demoapp
-    releaseName: demoapp-preview
-    version: 0.1.0
-    repo: file://../../base
-    valuesFile: values-preview.yaml
+patchesStrategicMerge:
+  - patches/deployment-patch.yaml
+  - patches/ingress-patch.yaml
 
-patches:
-  - path: deployment-patch.yaml
-  - path: ingress-patch.yaml
+configMapGenerator:
+  - name: preview-values
+    files:
+      - values.yaml=values-preview.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
