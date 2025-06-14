@@ -17,23 +17,16 @@ spec:
           - branchMatch: '^main$'
   template:
     metadata:
-      name: 'demoapp-pr{{number}}'
+      name: demoapp-pr{{number}}
     spec:
       project: default
       source:
         repoURL: https://github.com/kernelpanic09/k3s_lab.git
         targetRevision: '{{head_sha}}'
-        path: apps/demoapp/overlays/preview
+        path: apps/demoapp/base
         helm:
-          values: |
-            namespace: demoapp-pr{{number}}
-            image:
-              tag: pr-{{head_sha}}
-            ingress:
-              host: pr{{number}}.codepretzels.com
-            env:
-              GIT_SHA: "{{head_sha}}"
-              DEPLOY_ENV: preview
+          valueFiles:
+            - ../../overlays/preview/values-preview.yaml
       destination:
         server: https://kubernetes.default.svc
         namespace: demoapp-pr{{number}}
