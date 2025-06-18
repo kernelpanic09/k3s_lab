@@ -1,4 +1,4 @@
-# 🧪 k3s Homelab – Real-World Kubernetes for DevOps Practice
+# 🧪 k3s Homelab
 
 This repo documents a full-stack, production-style k3s homelab built for real-world learning, DevOps workflows, and infrastructure experimentation. It showcases GitOps with ArgoCD, CI/CD with GitHub Actions, Helm-based app deployment, and infrastructure automation using Ansible and Terraform.
 
